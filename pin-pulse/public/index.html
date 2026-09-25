@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23A13D63'/%3E%3Cpath d='M7 20c3-6 6 2 9-4s6 2 9-4' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<title>Pin Pulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#EDEFF1; --surface:#FFFFFF; --surface-2:#F6F7F8; --line:#D9DDE2;
+  --ink:#1B2230; --ink-2:#4A5362; --muted:#7A8391;
+  --accent:#A13D63; --accent-ink:#FFFFFF; --accent-soft:#F4E3EA;
+  --up:#3F6B2E; --up-soft:#E3EDDC; --down:#9A4A1F; --down-soft:#F5E6DC;
+  --bar:#C98AA3; --bar-track:#E6E9ED; --shadow:0 1px 2px rgba(27,34,48,.06),0 4px 14px rgba(27,34,48,.06);
+  --display:"Gloock",Georgia,"Times New Roman",serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#14171C; --surface:#1D2128; --surface-2:#232830; --line:#323843;
+    --ink:#E9EBEF; --ink-2:#B5BCC7; --muted:#8A93A0;
+    --accent:#E58AAE; --accent-ink:#1B1016; --accent-soft:#3A2230;
+    --up:#9CCB84; --up-soft:#243220; --down:#E8A078; --down-soft:#3A271C;
+    --bar:#B86A8A; --bar-track:#2C323B; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#14171C; --surface:#1D2128; --surface-2:#232830; --line:#323843;
+  --ink:#E9EBEF; --ink-2:#B5BCC7; --muted:#8A93A0;
+  --accent:#E58AAE; --accent-ink:#1B1016; --accent-soft:#3A2230;
+  --up:#9CCB84; --up-soft:#243220; --down:#E8A078; --down-soft:#3A271C;
+  --bar:#B86A8A; --bar-track:#2C323B; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:0 48px}
+a{color:inherit}
+.wrap{max-width:1280px;margin:0 auto}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:28px 18px}
+.brand h1{font-family:var(--display);font-weight:400;font-size:clamp(30px,5vw,42px);line-height:1;margin:0;letter-spacing:-.01em}
+.brand h1 span{color:var(--accent)}
+.brand p{margin:6px 0 0;color:var(--ink-2);font-size:13.5px}
+.status{font-size:12.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:600px){.status{text-align:left}}
+.status b{color:var(--ink-2);font-weight:600}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
+nav.tabs button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font:600 14px var(--body);color:var(--ink-2);cursor:pointer;white-space:nowrap;margin-bottom:-1px}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible,.seg button:focus-visible,.chip:focus-visible,.btn:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* summary strip */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.sum{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.sum .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.sum .v{font-size:15px;font-weight:600;margin-top:4px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sum .v.big{display:block}
+.sum .v.big{font-family:var(--display);font-weight:400;font-size:26px;line-height:1.1}
+.swatches{display:flex;gap:0;margin-top:8px;border-radius:6px;overflow:hidden;height:26px}
+.swatches i{flex:1;display:block}
+.sum .note{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:12px}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px;flex-wrap:wrap}
+.seg button{appearance:none;border:0;background:none;padding:6px 11px;border-radius:6px;font:600 12.5px var(--body);color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+label.lbl{font-size:12px;color:var(--muted);font-weight:600;display:inline-flex;gap:6px;align-items:center}
+select{font:500 13px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:4px 11px;font:600 12px var(--body);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip .n{font-family:var(--mono);font-weight:500;opacity:.75}
+.chip .src{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.chip .src.trending{background:var(--up)}
+
+/* masonry */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;align-items:start}
+.card{background:var(--surface);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);display:block;text-decoration:none;position:relative}
+.card .img{position:relative;background:var(--surface-2);display:block}
+.card .img{aspect-ratio:4/5;overflow:hidden}
+.card img{display:block;width:100%;height:100%;object-fit:cover}
+.card .rank{position:absolute;top:8px;left:8px;background:rgba(20,23,28,.72);color:#fff;font:500 11.5px var(--mono);padding:2px 7px;border-radius:6px;backdrop-filter:blur(4px)}
+.card .vid{position:absolute;top:8px;right:8px;background:rgba(20,23,28,.72);color:#fff;font:600 10.5px var(--body);padding:2px 7px;border-radius:6px;letter-spacing:.05em}
+.card .b{padding:10px 12px 12px;display:grid;gap:7px}
+.card .t{font-weight:600;font-size:13px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.stats{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-variant-numeric:tabular-nums}
+.stats .saves{font-family:var(--display);font-size:20px;line-height:1}
+.stats .saves small{font-family:var(--body);font-size:11.5px;color:var(--muted);margin-left:3px}
+.stats .vel{font:500 12px var(--mono);color:var(--ink-2)}
+.pill{display:inline-flex;align-items:center;gap:3px;font:600 11.5px var(--mono);padding:1px 7px;border-radius:999px}
+.pill.up{background:var(--up-soft);color:var(--up)}
+.pill.down{background:var(--down-soft);color:var(--down)}
+.pill.flat{background:var(--surface-2);color:var(--muted)}
+.meta{font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 8px}
+.meta .term{color:var(--accent);font-weight:600}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:28px;text-align:center;color:var(--ink-2)}
+
+/* trends */
+.trend-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.trend-head h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.trend-head .wk{font-size:12.5px;color:var(--muted)}
+.tpanel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table.tt{width:100%;border-collapse:collapse;min-width:640px;font-variant-numeric:tabular-nums}
+.tt th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tt td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tt tr:last-child td{border-bottom:0}
+.tt .r{font:500 12px var(--mono);color:var(--muted);width:32px}
+.tt .term a{font-weight:600;text-decoration:none}
+.tt .term a:hover{text-decoration:underline;text-decoration-color:var(--accent)}
+.tt .term .alt{display:block;font-size:11.5px;color:var(--muted);font-weight:400}
+.barcell{width:34%;min-width:180px}
+.barrow{display:flex;align-items:center;gap:8px}
+.bartrack{flex:1;height:10px;background:var(--bar-track);border-radius:0 4px 4px 0;position:relative}
+.barfill{position:absolute;left:0;top:0;bottom:0;background:var(--bar);border-radius:0 4px 4px 0}
+.barval{font:500 12px var(--mono);width:64px;text-align:right;color:var(--ink)}
+.spark{display:block}
+.num{font:500 12px var(--mono)}
+.vol{display:flex;align-items:center;gap:6px}
+.vol i{display:block;height:6px;border-radius:3px;background:var(--ink-2);opacity:.55}
+.foot{font-size:12px;color:var(--muted);margin-top:10px;max-width:80ch}
+.cross{margin-top:26px}
+.cross h3{font-family:var(--display);font-weight:400;font-size:20px;margin:0 0 4px}
+.cross p{margin:0 0 12px;color:var(--ink-2);font-size:13px}
+.xgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.xcol{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.xcol h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.xcol ol{margin:0;padding-left:20px;display:grid;gap:5px}
+.xcol li{font-size:13px}
+.xcol li .num{color:var(--up);margin-left:6px}
+
+/* watchlist */
+.wl{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.wl{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.panel h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 4px}
+.panel p.sub{margin:0 0 14px;color:var(--ink-2);font-size:13px}
+.terms{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.term-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 12px;font-size:13px;background:var(--surface-2)}
+.term-tag.next{border-color:var(--accent)}
+.term-tag button{appearance:none;border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 4px;border-radius:50%}
+.term-tag button:hover{color:var(--down)}
+.addrow{display:flex;gap:8px}
+.addrow input{flex:1;min-width:0;font:500 14px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--surface);border-radius:8px;padding:8px 14px;font:600 13px var(--body);cursor:pointer}
+.btn.ghost{background:none;color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+.fields{display:grid;gap:12px}
+.field{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.field label{font-size:13px;font-weight:600}
+.field label small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.field input{width:80px;font:500 14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);text-align:right}
+.cost{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.cost .row{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.cost .row b{font-family:var(--mono);font-weight:500}
+.cost .warn{color:var(--down);font-size:12.5px}
+.saverow{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.toast{font-size:12.5px;color:var(--up);font-weight:600}
+.toast.err{color:var(--down)}
+.readonly{font-size:12.5px;color:var(--muted);margin-top:8px}
+.runs{margin-top:18px}
+.runs table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.runs td,.runs th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.runs th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.loading{color:var(--muted);padding:30px 0}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s ease}.card:hover{transform:translateY(-2px)}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Pin <span>Pulse</span></h1>
+      <p>What Pinterest is saving right now, for knitwear inspiration. US &amp; Europe.</p>
+    </div>
+    <div class="status" id="status">Loading…</div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-feed" aria-selected="true" data-tab="feed">Today's pins</button>
+    <button role="tab" id="tab-trends" aria-selected="false" data-tab="trends">Trend radar</button>
+    <button role="tab" id="tab-watch" aria-selected="false" data-tab="watch">Watchlist &amp; settings</button>
+  </nav>
+
+  <section id="view-feed">
+    <div class="summary" id="summary"></div>
+    <div class="controls">
+      <div class="seg" id="range" role="group" aria-label="Time range">
+        <button data-v="day" aria-pressed="true">Latest refresh</button>
+        <button data-v="week" aria-pressed="false">Last 7 days</button>
+      </div>
+      <label class="lbl" for="sort">Sort by
+        <select id="sort">
+          <option value="velocity">Hottest (saves per day)</option>
+          <option value="saves">Most saved</option>
+          <option value="growth">Gaining saves since last check</option>
+          <option value="new">Newest pins</option>
+        </select>
+      </label>
+    </div>
+    <div class="chips" id="termchips"></div>
+    <div id="grid" class="grid"></div>
+  </section>
+
+  <section id="view-trends" hidden>
+    <div class="trend-head">
+      <div>
+        <h2>Rising searches</h2>
+        <div class="wk" id="wk"></div>
+      </div>
+      <div class="controls" style="margin:0">
+        <div class="seg" id="region" role="group" aria-label="Region"></div>
+        <div class="seg" id="interest" role="group" aria-label="Category"></div>
+      </div>
+    </div>
+    <div class="tpanel"><table class="tt" id="ttable"></table></div>
+    <p class="foot">Monthly growth is how much more people searched the term this month than last, per Pinterest Trends. Bars use a log scale, since growth ranges from +20% to over +5,000%. Search volume is Pinterest's relative index (100 = the most-searched term in the list). The history line fills in each week the app refreshes.</p>
+    <div class="cross">
+      <h3>Rising in every market</h3>
+      <p>Top women's fashion searches by monthly growth, side by side.</p>
+      <div class="xgrid" id="xgrid"></div>
+    </div>
+  </section>
+
+  <section id="view-watch" hidden>
+    <div class="wl">
+      <div class="panel">
+        <h2>Watchlist</h2>
+        <p class="sub">Searches the app checks for top pins. It rotates through the list, a few terms a day, and adds the fastest-rising trend searches automatically. The outlined terms are up next.</p>
+        <div class="terms" id="terms"></div>
+        <form class="addrow" id="addform">
+          <input id="newterm" placeholder="Add a search, e.g. aran jumper" autocomplete="off" maxlength="80">
+          <button class="btn" type="submit">Add</button>
+        </form>
+        <div class="readonly" id="ro" hidden>Only the owner can change the watchlist.</div>
+      </div>
+      <div class="panel">
+        <h2>Daily budget</h2>
+        <p class="sub">Each pin fetched costs about $0.0025 on Apify, and each trend search about $0.002. The free Apify plan includes $5 a month.</p>
+        <div class="fields">
+          <div class="field"><label for="f-watch">Watchlist searches per day<small>Rotates through your list</small></label><input id="f-watch" type="number" min="0" max="20"></div>
+          <div class="field"><label for="f-trend">Trending searches per day<small>Picked from Trend radar</small></label><input id="f-trend" type="number" min="0" max="10"></div>
+          <div class="field"><label for="f-pins">Pins per search<small>Top results from Pinterest search</small></label><input id="f-pins" type="number" min="3" max="50"></div>
+        </div>
+        <div class="cost" id="cost"></div>
+        <div class="field" style="margin-top:14px"><label for="f-pass">Admin password<small>Set as ADMIN_PASSWORD in Vercel. Remembered on this device.</small></label><input id="f-pass" type="password" autocomplete="current-password" style="width:140px;text-align:left;font-family:var(--body)"></div>
+        <div class="saverow">
+          <button class="btn" id="savecfg" type="button">Save settings</button>
+          <span class="toast" id="toast" role="status"></span>
+        </div>
+        <div class="runs" id="runs"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtN = n => n == null ? "–" : n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,"")+"M" : n >= 1e4 ? Math.round(n/1e3)+"k" : n >= 1e3 ? (n/1e3).toFixed(1).replace(/\.0$/,"")+"k" : String(Math.round(n*10)/10);
+const fmtPct = p => p == null ? "–" : (p > 0 ? "+" : "") + (Math.abs(p) >= 10000 ? "10,000%+" : p.toLocaleString("en-US") + "%");
+const REGIONS = [["US","United States"],["GB+IE","UK & Ireland"],["DE+AT+CH","DACH"],["FR","France"]];
+const INTERESTS = [["FASHION_WOMENS","Women's fashion"],["DIY_AND_CRAFTS","DIY & crafts"],["HOME_DECOR","Home decor"]];
+const PRICE_PIN = 0.0025, PRICE_TERM = 0.002;
+
+const S = { tab: "feed", range: "day", sort: "velocity", term: null, region: "US", interest: "FASHION_WOMENS",
+  runs: [], pins: [], trends: [], config: null, configVersion: null, state: null, canEdit: false, db: null };
+try { const t = localStorage.getItem("pp.tab"); if (t) S.tab = t; } catch(e){}
+try { const r = localStorage.getItem("pp.region"); if (r) S.region = r; } catch(e){}
+
+function ago(iso){
+  if(!iso) return "";
+  const d = (Date.now() - new Date(iso).getTime())/864e5;
+  if (d < 1) return "today";
+  if (d < 2) return "yesterday";
+  if (d < 31) return Math.round(d)+" days ago";
+  if (d < 365) return Math.round(d/30.4)+" mo ago";
+  return (d/365).toFixed(1).replace(/\.0$/,"")+" yr ago";
+}
+function dateLabel(ds){ try { return new Date(ds+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); } catch(e){ return ds; } }
+
+/* ---------- tabs ---------- */
+function setTab(t){
+  S.tab = t;
+  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+  $("#view-feed").hidden = t !== "feed"; $("#view-trends").hidden = t !== "trends"; $("#view-watch").hidden = t !== "watch";
+  try { localStorage.setItem("pp.tab", t); } catch(e){}
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+if (location.hash && ["feed","trends","watch"].includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
+setTab(S.tab);
+
+/* ---------- feed ---------- */
+function latestRun(){ return S.runs[0] || null; }
+function pinsInView(){
+  const lr = latestRun(); if (!lr) return [];
+  let ps = S.pins;
+  if (S.range === "day") ps = ps.filter(p => p.lastSeen === lr.date);
+  if (S.term) ps = ps.filter(p => (p.terms||[]).includes(S.term) || p.term === S.term);
+  const key = { velocity: p => p.velocity||0, saves: p => p.saves||0, growth: p => p.growth ?? -1e9, new: p => p.createdAt||"" }[S.sort];
+  return ps.slice().sort((a,b) => { const x = key(a), y = key(b); return x < y ? 1 : x > y ? -1 : (b.saves||0)-(a.saves||0); });
+}
+function renderSummary(){
+  const lr = latestRun();
+  const box = $("#summary");
+  if (!lr) { box.innerHTML = ""; return; }
+  const today = S.pins.filter(p => p.lastSeen === lr.date);
+  const top = today.slice().sort((a,b)=>(b.velocity||0)-(a.velocity||0))[0];
+  const cols = today.filter(p => /^#[0-9a-f]{6}$/i.test(p.color||"")).sort((a,b)=>(b.velocity||0)-(a.velocity||0)).slice(0,14)
+    .map(p => p.color).sort((a,b)=>hue(a)-hue(b));
+  const terms = (lr.terms||[]).map(t => t.term);
+  box.innerHTML = `
+    <div class="sum"><div class="k">Latest refresh</div><div class="v big">${esc(dateLabel(lr.date))}</div><div class="note">${today.length} pins from ${terms.length} searches</div></div>
+    <div class="sum"><div class="k">Hottest pin</div><div class="v">${top ? esc(top.title || "Untitled pin") : "–"}</div><div class="note">${top ? fmtN(top.velocity)+" saves a day · "+esc(top.term) : ""}</div></div>
+    <div class="sum"><div class="k">Colours in the top pins</div><div class="swatches" role="img" aria-label="Dominant colours of today's hottest pins">${cols.map(c=>`<i style="background:${c}" title="${c}"></i>`).join("")}</div><div class="note">Dominant colour of each of the 14 hottest pins</div></div>`;
+}
+function hue(hex){ const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; if(d<.08) return 400+mx*50; let h= mx===r?((g-b)/d)%6: mx===g?(b-r)/d+2:(r-g)/d+4; return (h*60+360)%360; }
+function renderChips(){
+  const lr = latestRun();
+  const base = S.range === "day" && lr ? S.pins.filter(p => p.lastSeen === lr.date) : S.pins;
+  const counts = new Map(), src = new Map();
+  base.forEach(p => { counts.set(p.term, (counts.get(p.term)||0)+1); src.set(p.term, p.source); });
+  if (S.term && !counts.has(S.term)) S.term = null;
+  const list = [...counts.entries()].sort((a,b)=>b[1]-a[1]);
+  $("#termchips").innerHTML = `<button class="chip" aria-pressed="${!S.term}" data-t="">All searches <span class="n">${base.length}</span></button>` +
+    list.map(([t,n]) => `<button class="chip" aria-pressed="${S.term===t}" data-t="${esc(t)}" title="${src.get(t)==="trending"?"From Trend radar":"From your watchlist"}"><span class="src ${src.get(t)==="trending"?"trending":""}"></span>${esc(t)} <span class="n">${n}</span></button>`).join("");
+  $("#termchips").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { S.term = c.dataset.t || null; renderFeed(); }));
+}
+function growthPill(p){
+  if (p.growth == null) return "";
+  const g = p.growth, cls = g > 0.5 ? "up" : g < -0.5 ? "down" : "flat";
+  return `<span class="pill ${cls}" title="Change in saves per day since the pin was last checked">${g>0?"▲ +":g<0?"▼ ":""}${fmtN(Math.abs(g))}/day</span>`;
+}
+function renderFeed(){
+  renderSummary(); renderChips();
+  const grid = $("#grid");
+  if (!S.runs.length) { grid.innerHTML = `<div class="empty">No pins yet. The first refresh runs tomorrow morning.</div>`; return; }
+  const ps = pinsInView();
+  if (!ps.length) { grid.innerHTML = `<div class="empty">No pins match this filter.</div>`; return; }
+  grid.innerHTML = ps.map((p,i) => {
+    const ratio = p.w && p.h ? Math.min(2.2, p.h/p.w) : 1.3;
+    const img = p.img ? `<img src="${esc(p.img)}" alt="${esc(p.title||p.term)}" loading="lazy" referrerpolicy="no-referrer" width="360" height="${Math.round(360*ratio)}" style="background:${esc(p.color||"var(--surface-2)")}">`
+      : `<span style="display:block;width:100%;height:100%;background:${esc(p.color||"var(--surface-2)")}"></span>`;
+    return `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener">
+      <span class="img">${img}<span class="rank">#${i+1}</span>${p.video?'<span class="vid">VIDEO</span>':""}</span>
+      <span class="b">
+        ${p.title ? `<span class="t">${esc(p.title)}</span>` : ""}
+        <span class="stats"><span class="saves">${fmtN(p.saves)}<small>saves</small></span><span class="vel">${fmtN(p.velocity)}/day</span>${growthPill(p)}</span>
+        <span class="meta"><span class="term">${esc(p.term)}</span><span>posted ${esc(ago(p.createdAt))}</span>${p.domain?`<span>${esc(p.domain)}</span>`:""}</span>
+      </span></a>`;
+  }).join("");
+}
+$("#range").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+  S.range = b.dataset.v; $("#range").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); loadPins();
+}));
+$("#sort").addEventListener("change", e => { S.sort = e.target.value; renderFeed(); });
+
+/* ---------- trends ---------- */
+function segs(el, items, cur, onPick){
+  el.innerHTML = items.map(([v,l]) => `<button data-v="${esc(v)}" aria-pressed="${v===cur}">${esc(l)}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => onPick(b.dataset.v)));
+}
+function trendDocs(region, interest){ return S.trends.filter(t => t.region === region && t.interest === interest).sort((a,b)=>a.endDate<b.endDate?-1:1); }
+function sparkline(vals){
+  const W=90,H=24,P=3;
+  if (vals.filter(v=>v!=null).length < 2) return `<span class="num" style="color:var(--muted)" title="History builds each week">building</span>`;
+  const max = Math.max(...vals.filter(v=>v!=null)), min = 0;
+  const x = i => P + i*(W-2*P)/(vals.length-1), y = v => H-P - (v-min)/(max-min||1)*(H-2*P);
+  const pts = vals.map((v,i)=> v==null?null:[x(i),y(v)]).filter(Boolean);
+  const d = pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+","+p[1].toFixed(1)).join("");
+  const area = d + `L${pts[pts.length-1][0].toFixed(1)},${H-P}L${pts[0][0].toFixed(1)},${H-P}Z`;
+  const last = pts[pts.length-1];
+  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly search volume"><path d="${area}" fill="var(--bar)" opacity=".18"/><path d="${d}" fill="none" stroke="var(--bar)" stroke-width="2" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="var(--accent)"/></svg>`;
+}
+function renderTrends(){
+  segs($("#region"), REGIONS, S.region, v => { S.region = v; try{localStorage.setItem("pp.region",v)}catch(e){} renderTrends(); });
+  segs($("#interest"), INTERESTS, S.interest, v => { S.interest = v; renderTrends(); });
+  const docs = trendDocs(S.region, S.interest);
+  const tbl = $("#ttable");
+  if (!docs.length) { tbl.innerHTML = `<tr><td class="loading">No trend data for this market yet.</td></tr>`; $("#wk").textContent=""; }
+  else {
+    const cur = docs[docs.length-1];
+    $("#wk").textContent = `Pinterest week ending ${dateLabel(cur.endDate)} · ${docs.length} week${docs.length>1?"s":""} of history`;
+    const maxLog = Math.log10(Math.max(...cur.terms.map(t => Math.max(1,(t.m||0)+100))));
+    const minLog = 2; // 0% growth
+    tbl.innerHTML = `<thead><tr><th>#</th><th>Search</th><th>Monthly growth</th><th>Weekly</th><th>Yearly</th><th>Volume</th><th>History</th></tr></thead><tbody>` +
+      cur.terms.map((t,i) => {
+        const lg = Math.log10(Math.max(100,(t.m||0)+100));
+        const w = Math.max(2, (lg-minLog)/(maxLog-minLog||1)*100);
+        const hist = docs.map(d => (d.terms.find(x => x.term === t.term)||{}).count ?? null);
+        const pill = v => v==null?"–":`<span class="pill ${v>0?"up":v<0?"down":"flat"}">${fmtPct(v)}</span>`;
+        const q = encodeURIComponent(t.term);
+        return `<tr><td class="r">${i+1}</td>
+          <td class="term"><a href="https://www.pinterest.com/search/pins/?q=${q}" target="_blank" rel="noopener">${esc(t.term)}</a><span class="alt"><a href="https://trends.pinterest.com/search/?q=${q}" target="_blank" rel="noopener" style="font-weight:400">on Pinterest Trends ↗</a></span></td>
+          <td class="barcell"><div class="barrow" title="${esc(t.term)}: ${fmtPct(t.m)} month over month"><div class="bartrack"><div class="barfill" style="width:${w.toFixed(1)}%"></div></div><span class="barval">${fmtPct(t.m)}</span></div></td>
+          <td>${pill(t.w)}</td><td>${pill(t.y)}</td>
+          <td><span class="vol" title="Relative search volume ${t.count}"><i style="width:${Math.max(3,(t.count||0)*.5)}px"></i><span class="num">${t.count??"–"}</span></span></td>
+          <td>${sparkline(hist)}</td></tr>`;
+      }).join("") + `</tbody>`;
+  }
+  $("#xgrid").innerHTML = REGIONS.map(([r,l]) => {
+    const d = trendDocs(r, "FASHION_WOMENS").pop();
+    if (!d) return "";
+    const top = d.terms.slice().sort((a,b)=>(b.m||0)-(a.m||0)).slice(0,5);
+    return `<div class="xcol"><h4>${esc(l)}</h4><ol>${top.map(t=>`<li><a href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(t.term)}" target="_blank" rel="noopener">${esc(t.term)}</a><span class="num">${fmtPct(t.m)}</span></li>`).join("")}</ol></div>`;
+  }).join("");
+}
+
+/* ---------- watchlist ---------- */
+let draft = null;
+function renderWatch(){
+  if (!S.config) { $("#terms").innerHTML = `<span class="loading">Loading…</span>`; return; }
+  if (!draft) draft = { watchlist: [...(S.config.watchlist||[])], watchTermsPerDay: S.config.watchTermsPerDay, trendTermsPerDay: S.config.trendTermsPerDay, pinsPerTerm: S.config.pinsPerTerm };
+  const cur = (S.state?.watchCursor || 0) % Math.max(1, draft.watchlist.length);
+  const nextSet = new Set(); for (let i=0;i<draft.watchTermsPerDay && i<draft.watchlist.length;i++) nextSet.add((cur+i)%draft.watchlist.length);
+  $("#terms").innerHTML = draft.watchlist.map((t,i) => `<span class="term-tag ${nextSet.has(i)?"next":""}">${esc(t)}${S.canEdit?`<button type="button" data-i="${i}" aria-label="Remove ${esc(t)}">×</button>`:""}</span>`).join("") || `<span class="loading">No searches yet. Add one below.</span>`;
+  $("#terms").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { draft.watchlist.splice(+b.dataset.i,1); renderWatch(); }));
+  $("#addform").hidden = !S.canEdit; $("#ro").hidden = S.canEdit;
+  ["watch","trend","pins"].forEach(k => { const el = $("#f-"+k); el.disabled = !S.canEdit; });
+  if (document.activeElement?.id?.startsWith("f-") !== true) {
+    $("#f-watch").value = draft.watchTermsPerDay; $("#f-trend").value = draft.trendTermsPerDay; $("#f-pins").value = draft.pinsPerTerm;
+  }
+  renderCost();
+  $("#savecfg").hidden = !S.canEdit;
+  const rr = S.runs.slice(0,10);
+  $("#runs").innerHTML = rr.length ? `<table><thead><tr><th>Refresh</th><th>Pins</th><th>Searches</th><th>Cost</th></tr></thead><tbody>${rr.map(r=>`<tr><td>${esc(dateLabel(r.date))}${r.trendsFetched?" · trends":""}</td><td>${(r.pins||[]).length}</td><td>${(r.terms||[]).length}</td><td>$${(r.cost||0).toFixed(2)}</td></tr>`).join("")}</tbody></table>` : "";
+}
+function renderCost(){
+  const c = S.config || {};
+  const perDay = (draft.watchTermsPerDay + draft.trendTermsPerDay) * draft.pinsPerTerm * PRICE_PIN;
+  const trendsMonth = (c.regions||[]).length * (c.interests||[]).length * (c.trendTermsPerQuery||7) * PRICE_TERM * 30/(c.trendsEveryDays||7);
+  const month = perDay*30 + trendsMonth;
+  const spent = S.state?.costLog?.[new Date().toISOString().slice(0,7)] || 0;
+  $("#cost").innerHTML = `
+    <div class="row"><span>Pins per day</span><b>${(draft.watchTermsPerDay+draft.trendTermsPerDay)*draft.pinsPerTerm}</b></div>
+    <div class="row"><span>Estimated cost per month</span><b>$${month.toFixed(2)}</b></div>
+    <div class="row"><span>Spent this month</span><b>$${spent.toFixed(2)}</b></div>
+    ${month > 5 ? `<div class="warn">This is more than the free $5 Apify credit. Apify stops runs when the credit runs out, unless you upgrade your plan.</div>` : ""}`;
+}
+[["watch","watchTermsPerDay"],["trend","trendTermsPerDay"],["pins","pinsPerTerm"]].forEach(([k,f]) => {
+  $("#f-"+k).addEventListener("input", e => { const v = parseInt(e.target.value,10); if (!isNaN(v) && draft) { draft[f] = Math.max(+e.target.min, Math.min(+e.target.max, v)); renderCost(); } });
+});
+$("#addform").addEventListener("submit", e => {
+  e.preventDefault(); const v = $("#newterm").value.trim().toLowerCase();
+  if (v && draft && !draft.watchlist.includes(v)) { draft.watchlist.push(v); $("#newterm").value = ""; renderWatch(); }
+});
+try { $("#f-pass").value = localStorage.getItem("pp.pass") || ""; } catch(e){}
+$("#savecfg").addEventListener("click", async () => {
+  const t = $("#toast"); t.className = "toast"; t.textContent = "";
+  if (!draft) return;
+  const password = $("#f-pass").value;
+  if (!password) { t.className = "toast err"; t.textContent = "Enter the admin password first."; $("#f-pass").focus(); return; }
+  try {
+    $("#savecfg").disabled = true;
+    const r = await fetch("/api/config", { method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password, config: draft }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+    try { localStorage.setItem("pp.pass", password); } catch(e){}
+    S.config = { ...S.config, ...draft };
+    t.textContent = "Saved. The next morning refresh uses these settings.";
+  } catch (e) { t.className = "toast err"; t.textContent = "Couldn't save: " + e.message + "."; }
+  finally { $("#savecfg").disabled = false; }
+});
+
+/* ---------- status ---------- */
+function renderStatus(){
+  const st = S.state;
+  const lr = latestRun();
+  $("#status").innerHTML = lr ? `Refreshed <b>${esc(ago(lr.at))}</b> · ${esc(new Date(lr.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}<br>Refreshes every morning around 7:00 (Sofia time)` : "Waiting for the first refresh";
+}
+
+/* ---------- data ---------- */
+let req = 0;
+async function load(range){
+  const my = ++req;
+  $("#grid").innerHTML = `<div class="loading">Loading pins…</div>`;
+  try {
+    const r = await fetch("/api/data?range=" + range);
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+    if (my !== req) return;
+    S.runs = j.runs || []; S.trends = j.trends || []; S.pins = j.pins || [];
+    if (!S.config || !draft) { S.config = j.config; draft = null; }
+    S.state = j.state;
+    renderStatus(); renderFeed(); renderTrends(); renderWatch();
+  } catch (e) {
+    $("#status").textContent = "Couldn't load data.";
+    $("#grid").innerHTML = `<div class="empty">Couldn't load the data (${esc(e.message)}). Reload the page to try again.</div>`;
+  }
+}
+function loadPins(){ load(S.range); }
+S.canEdit = true;
+document.addEventListener("error", e => { const t = e.target; if (t && t.tagName === "IMG") { t.style.visibility = "hidden"; } }, true);
+renderTrends();
+load(S.range);
+})();
+</script>
+</body>
+</html>
