@@ -1,15 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="bg">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23A13D63'/%3E%3Cpath d='M7 20c3-6 6 2 9-4s6 2 9-4' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <title>Pin Pulse</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23A13D63'/%3E%3Cpath d='M7 20c3-6 6 2 9-4s6 2 9-4' stroke='white' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+
 :root{
   --ground:#EDEFF1; --surface:#FFFFFF; --surface-2:#F6F7F8; --line:#D9DDE2;
   --ink:#1B2230; --ink-2:#4A5362; --muted:#7A8391;
@@ -173,96 +174,119 @@ table.tt{width:100%;border-collapse:collapse;min-width:640px;font-variant-numeri
 .runs th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .loading{color:var(--muted);padding:30px 0}
 @media (prefers-reduced-motion:no-preference){.card{transition:transform .15s ease}.card:hover{transform:translateY(-2px)}}
-</style>
 
+/* v3 additions */
+.card{cursor:pointer;text-align:left;border:0;padding:0;font:inherit;color:inherit;width:100%}
+.visuals .grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.visuals .card .img{aspect-ratio:auto;max-height:520px}
+.visuals .card img{height:auto;max-height:520px}
+.period{font-size:12px;color:var(--muted)}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(10,12,16,.82);display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.lb-box{background:var(--surface);border-radius:14px;max-width:1000px;width:100%;max-height:100%;overflow:auto;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+@media (max-width:760px){.lb-box{grid-template-columns:1fr}}
+.lb-img{background:var(--surface-2);display:flex;align-items:center;justify-content:center;min-height:260px}
+.lb-img img{max-width:100%;max-height:80vh;display:block}
+.lb-info{padding:20px 22px;display:grid;gap:12px;align-content:start}
+.lb-info h3{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.2;margin:0;overflow-wrap:anywhere}
+.lb-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lb-stat{background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.lb-stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.lb-stat .v{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.lb-actions{display:flex;flex-wrap:wrap;gap:8px}
+.lb-actions a{text-decoration:none}
+.lb-close{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:14px;z-index:51;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;width:40px;height:40px;font-size:20px;cursor:pointer}
+.swatch-row{display:flex;gap:6px;align-items:center;font:500 12px var(--mono);color:var(--ink-2)}
+.swatch-row i{width:22px;height:22px;border-radius:6px;display:block;border:1px solid var(--line)}
+.src-group{margin-bottom:16px}
+.src-group h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.src{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.src:last-child{border-bottom:0}
+.src input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.src a{flex:1;min-width:0;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src a:hover{text-decoration:underline}
+.src .next{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.src button{appearance:none;border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px}
+.src button:hover{color:var(--down)}
+.addsrc{display:grid;gap:8px;margin-top:10px}
+.addsrc .row{display:flex;gap:8px;flex-wrap:wrap}
+.addsrc input{flex:1;min-width:200px;font:500 14px var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.hint{font-size:12px;color:var(--muted)}
+</style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <div class="brand">
       <h1>Pin <span>Pulse</span></h1>
-      <p>What Pinterest is saving right now, for knitwear inspiration. US &amp; Europe.</p>
+      <p>Най-харесваните визии в Pinterest в момента, за вдъхновение за плетива.</p>
     </div>
-    <div class="status" id="status">Loading…</div>
+    <div class="status" id="status">Зарежда…</div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button role="tab" id="tab-feed" aria-selected="true" data-tab="feed">Today's pins</button>
-    <button role="tab" id="tab-trends" aria-selected="false" data-tab="trends">Trend radar</button>
-    <button role="tab" id="tab-watch" aria-selected="false" data-tab="watch">Watchlist &amp; settings</button>
+    <button role="tab" aria-selected="true" data-tab="clothes">Дрехи</button>
+    <button role="tab" aria-selected="false" data-tab="visuals">Визии за дизайн</button>
+    <button role="tab" aria-selected="false" data-tab="sources">Източници и настройки</button>
   </nav>
 
   <section id="view-feed">
     <div class="summary" id="summary"></div>
     <div class="controls">
-      <div class="seg" id="range" role="group" aria-label="Time range">
-        <button data-v="day" aria-pressed="true">Latest refresh</button>
-        <button data-v="week" aria-pressed="false">Last 7 days</button>
-      </div>
-      <label class="lbl" for="minsaves">Show
+      <label class="lbl" for="minsaves">Покажи
         <select id="minsaves">
-          <option value="50">Pins with 50+ saves</option>
-          <option value="500">Pins with 500+ saves</option>
-          <option value="0">All pins</option>
+          <option value="0">Всички</option>
+          <option value="1000">1 000+ запазвания</option>
+          <option value="10000">10 000+ запазвания</option>
         </select>
       </label>
-      <label class="lbl" for="sort">Sort by
+      <label class="lbl" for="sort">Подреди по
         <select id="sort">
-          <option value="velocity">Hottest (saves per day)</option>
-          <option value="saves">Most saved</option>
-          <option value="growth">Gaining saves since last check</option>
-          <option value="new">Newest pins</option>
+          <option value="velocity">Най-горещи (запазвания на ден)</option>
+          <option value="growth">Набират най-бързо сега</option>
+          <option value="saves">Най-много запазвания</option>
+          <option value="new">Най-нови</option>
         </select>
       </label>
+      <span class="period" id="period"></span>
     </div>
-    <div class="chips" id="termchips"></div>
+    <div class="chips" id="chips"></div>
     <div id="grid" class="grid"></div>
   </section>
 
-  <section id="view-trends" hidden>
-    <div class="trend-head">
-      <div>
-        <h2>Rising searches</h2>
-        <div class="wk" id="wk"></div>
-      </div>
-      <div class="controls" style="margin:0">
-        <div class="seg" id="region" role="group" aria-label="Region"></div>
-        <div class="seg" id="interest" role="group" aria-label="Category"></div>
-      </div>
-    </div>
-    <div class="tpanel"><table class="tt" id="ttable"></table></div>
-    <p class="foot">Monthly growth is how much more people searched the term this month than last, per Pinterest Trends. Bars use a log scale, since growth ranges from +20% to over +5,000%. Search volume is Pinterest's relative index (100 = the most-searched term in the list). The history line fills in each week the app refreshes.</p>
-    <div class="cross">
-      <h3>Rising in every market</h3>
-      <p>Top women's fashion searches by monthly growth, side by side.</p>
-      <div class="xgrid" id="xgrid"></div>
-    </div>
-  </section>
-
-  <section id="view-watch" hidden>
+  <section id="view-sources" hidden>
     <div class="wl">
       <div class="panel">
-        <h2>Watchlist</h2>
-        <p class="sub">Searches the app checks for top pins. It rotates through the list, a few terms a day, and adds the fastest-rising trend searches automatically. The outlined terms are up next.</p>
-        <div class="terms" id="terms"></div>
-        <form class="addrow" id="addform">
-          <input id="newterm" placeholder="Add a search, e.g. aran jumper" autocomplete="off" maxlength="80">
-          <button class="btn" type="submit">Add</button>
+        <h2>Източници</h2>
+        <p class="sub">Страници „Ideas“ в Pinterest, които показват най-популярните пинове по тема. Приложението чете по няколко на ден, на ред. „Следваща“ означава, че ще бъде прочетена при следващото обновяване.</p>
+        <div id="srclist"></div>
+        <form class="addsrc" id="addform">
+          <strong style="font-size:13px">Добави източник</strong>
+          <input id="newurl" placeholder="Линк към страница Ideas, напр. https://www.pinterest.com/ideas/aran-sweater/123456789/" autocomplete="off">
+          <div class="row">
+            <select id="newcat" aria-label="Къде да се показва">
+              <option value="clothes|knitwear">Дрехи</option>
+              <option value="visuals|patterns">Визии: Шарки и мотиви</option>
+              <option value="visuals|illustration">Визии: Илюстрации и графики</option>
+              <option value="visuals|palettes">Визии: Цветови палитри</option>
+              <option value="visuals|nature">Визии: Природа и текстури</option>
+              <option value="visuals|art">Визии: Картини и рисунки</option>
+            </select>
+            <button class="btn ghost" type="submit">Добави</button>
+          </div>
+          <span class="hint">Как да намериш линк: отвори пин в Pinterest, под него има етикети с теми. Кликни етикет и копирай адреса. Той трябва да съдържа /ideas/.</span>
         </form>
-        <div class="readonly" id="ro" hidden>Only the owner can change the watchlist.</div>
       </div>
       <div class="panel">
-        <h2>Daily budget</h2>
-        <p class="sub">Each pin fetched costs about $0.0025 on Apify, and each trend search about $0.002. The free Apify plan includes $5 a month.</p>
+        <h2>Колко на ден</h2>
+        <p class="sub">Всяка страница дава около 20 пина и струва около $0.04 в Apify. Безплатният план на Apify дава $5 на месец.</p>
         <div class="fields">
-          <div class="field"><label for="f-watch">Watchlist searches per day<small>Rotates through your list</small></label><input id="f-watch" type="number" min="0" max="20"></div>
-          <div class="field"><label for="f-trend">Trending searches per day<small>Picked from Trend radar</small></label><input id="f-trend" type="number" min="0" max="10"></div>
-          <div class="field"><label for="f-pins">Pins per search<small>Top results from Pinterest search (max 10)</small></label><input id="f-pins" type="number" min="3" max="10"></div>
+          <div class="field"><label for="f-clothes">Страници за Дрехи на ден</label><input id="f-clothes" type="number" min="0" max="6"></div>
+          <div class="field"><label for="f-visuals">Страници за Визии на ден</label><input id="f-visuals" type="number" min="0" max="6"></div>
         </div>
         <div class="cost" id="cost"></div>
-        <div class="field" style="margin-top:14px"><label for="f-pass">Admin password<small>Set as ADMIN_PASSWORD in Vercel. Remembered on this device.</small></label><input id="f-pass" type="password" autocomplete="current-password" style="width:140px;text-align:left;font-family:var(--body)"></div>
+        <div class="field" style="margin-top:14px"><label for="f-pass">Парола<small>ADMIN_PASSWORD от Vercel. Запомня се на това устройство.</small></label><input id="f-pass" type="password" autocomplete="current-password" style="width:140px;text-align:left;font-family:var(--body)"></div>
         <div class="saverow">
-          <button class="btn" id="savecfg" type="button">Save settings</button>
+          <button class="btn" id="savecfg" type="button">Запази</button>
           <span class="toast" id="toast" role="status"></span>
         </div>
         <div class="runs" id="runs"></div>
@@ -271,251 +295,230 @@ table.tt{width:100%;border-collapse:collapse;min-width:640px;font-variant-numeri
   </section>
 </div>
 
+<div class="lb" id="lb" hidden>
+  <button class="lb-close" id="lbclose" aria-label="Затвори">×</button>
+  <div class="lb-box" id="lbbox" role="dialog" aria-modal="true"></div>
+</div>
+
 <script>
 (function(){
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmtN = n => n == null ? "–" : n >= 1e6 ? (n/1e6).toFixed(1).replace(/\.0$/,"")+"M" : n >= 1e4 ? Math.round(n/1e3)+"k" : n >= 1e3 ? (n/1e3).toFixed(1).replace(/\.0$/,"")+"k" : String(Math.round(n*10)/10);
-const fmtPct = p => p == null ? "–" : (p > 0 ? "+" : "") + (Math.abs(p) >= 10000 ? "10,000%+" : p.toLocaleString("en-US") + "%");
-const REGIONS = [["US","United States"],["GB+IE","UK & Ireland"],["DE+AT+CH","DACH"],["FR","France"]];
-const INTERESTS = [["FASHION_WOMENS","Women's fashion"],["DIY_AND_CRAFTS","DIY & crafts"],["HOME_DECOR","Home decor"]];
-const PRICE_PIN = 0.0025, PRICE_TERM = 0.002;
+const PER_PAGE = 20 * 0.00145 + 0.0086;
+const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} } };
 
-const S = { tab: "feed", range: "day", sort: "velocity", minSaves: 50, term: null, region: "US", interest: "FASHION_WOMENS",
-  runs: [], pins: [], trends: [], config: null, configVersion: null, state: null, canEdit: false, db: null };
-try { const t = localStorage.getItem("pp.tab"); if (t) S.tab = t; } catch(e){}
-try { const r = localStorage.getItem("pp.region"); if (r) S.region = r; } catch(e){}
-try { const m = localStorage.getItem("pp.minSaves"); if (m != null) S.minSaves = +m; } catch(e){}
+const S = { tab: "clothes", sort: store.get("pp.sort") || "velocity", minSaves: +(store.get("pp.min3") || 0), chip: null,
+  data: {}, cats: {}, config: null, state: null, runs: [], draft: null };
+const t0 = store.get("pp.tab3"); if (["clothes","visuals","sources"].includes(t0)) S.tab = t0;
+if (["clothes","visuals","sources"].includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
 
 function ago(iso){
   if(!iso) return "";
   const d = (Date.now() - new Date(iso).getTime())/864e5;
-  if (d < 1) return "today";
-  if (d < 2) return "yesterday";
-  if (d < 31) return Math.round(d)+" days ago";
-  if (d < 365) return Math.round(d/30.4)+" mo ago";
-  return (d/365).toFixed(1).replace(/\.0$/,"")+" yr ago";
+  if (d < 1) return "днес"; if (d < 2) return "вчера";
+  if (d < 31) return "преди " + Math.round(d) + " дни";
+  if (d < 365) return "преди " + Math.round(d/30.4) + " мес.";
+  return "преди " + (d/365).toFixed(1).replace(/\.0$/,"") + " г.";
 }
-function dateLabel(ds){ try { return new Date(ds+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); } catch(e){ return ds; } }
+const dateLabel = ds => { try { return new Date(ds+"T12:00:00Z").toLocaleDateString("bg-BG",{weekday:"short",day:"numeric",month:"short"}); } catch(e){ return ds; } };
+function hue(hex){ const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; if(d<.08) return 400+mx*50; let h= mx===r?((g-b)/d)%6: mx===g?(b-r)/d+2:(r-g)/d+4; return (h*60+360)%360; }
 
 /* ---------- tabs ---------- */
 function setTab(t){
-  S.tab = t;
+  S.tab = t; S.chip = null; store.set("pp.tab3", t);
   document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
-  $("#view-feed").hidden = t !== "feed"; $("#view-trends").hidden = t !== "trends"; $("#view-watch").hidden = t !== "watch";
-  try { localStorage.setItem("pp.tab", t); } catch(e){}
+  $("#view-feed").hidden = t === "sources"; $("#view-sources").hidden = t !== "sources";
+  $("#view-feed").classList.toggle("visuals", t === "visuals");
+  if (t === "sources") { load("clothes", true); renderSources(); } else load(t);
 }
 document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
-if (location.hash && ["feed","trends","watch"].includes(location.hash.slice(1))) S.tab = location.hash.slice(1);
-setTab(S.tab);
 
 /* ---------- feed ---------- */
-function latestRun(){ return S.runs[0] || null; }
-function strong(ps){ return ps.filter(p => (p.saves||0) >= S.minSaves); }
-function pinsInView(){
-  const lr = latestRun(); if (!lr) return [];
-  let ps = strong(S.pins);
-  if (S.range === "day") ps = ps.filter(p => p.lastSeen === lr.date);
-  if (S.term) ps = ps.filter(p => (p.terms||[]).includes(S.term) || p.term === S.term);
+function pinsNow(){
+  let ps = (S.data[S.tab]?.pins || []).filter(p => (p.saves||0) >= S.minSaves);
+  if (S.chip) ps = ps.filter(p => (S.tab === "visuals" ? p.cat : p.source) === S.chip);
   const key = { velocity: p => p.velocity||0, saves: p => p.saves||0, growth: p => p.growth ?? -1e9, new: p => p.createdAt||"" }[S.sort];
-  return ps.slice().sort((a,b) => { const x = key(a), y = key(b); return x < y ? 1 : x > y ? -1 : (b.saves||0)-(a.saves||0); });
+  return ps.sort((a,b) => { const x = key(a), y = key(b); return x < y ? 1 : x > y ? -1 : (b.saves||0)-(a.saves||0); });
 }
-function renderSummary(){
-  const lr = latestRun();
-  const box = $("#summary");
-  if (!lr) { box.innerHTML = ""; return; }
-  const today = strong(S.pins.filter(p => p.lastSeen === lr.date));
-  const top = today.slice().sort((a,b)=>(b.velocity||0)-(a.velocity||0))[0];
-  const cols = today.filter(p => /^#[0-9a-f]{6}$/i.test(p.color||"")).sort((a,b)=>(b.velocity||0)-(a.velocity||0)).slice(0,14)
-    .map(p => p.color).sort((a,b)=>hue(a)-hue(b));
-  const terms = (lr.terms||[]).map(t => t.term);
-  box.innerHTML = `
-    <div class="sum"><div class="k">Latest refresh</div><div class="v big">${esc(dateLabel(lr.date))}</div><div class="note">${today.length} pins${S.minSaves ? " with " + S.minSaves + "+ saves" : ""} from ${terms.length} searches</div></div>
-    <div class="sum"><div class="k">Hottest pin</div><div class="v">${top ? esc(top.title || "Untitled pin") : "–"}</div><div class="note">${top ? fmtN(top.velocity)+" saves a day · "+esc(top.term) : ""}</div></div>
-    <div class="sum"><div class="k">Colours in the top pins</div><div class="swatches" role="img" aria-label="Dominant colours of today's hottest pins">${cols.map(c=>`<i style="background:${c}" title="${c}"></i>`).join("")}</div><div class="note">Dominant colour of each of the 14 hottest pins</div></div>`;
+function renderSummary(ps){
+  const lr = S.runs[0];
+  const top = ps.slice().sort((a,b)=>(b.velocity||0)-(a.velocity||0))[0];
+  const cols = ps.filter(p => /^#[0-9a-f]{6}$/i.test(p.color||"")).sort((a,b)=>(b.velocity||0)-(a.velocity||0)).slice(0,16).map(p => p.color).sort((a,b)=>hue(a)-hue(b));
+  $("#summary").innerHTML = `
+    <div class="sum"><div class="k">Последно обновяване</div><div class="v big">${lr ? esc(dateLabel(lr.date)) : "–"}</div><div class="note">${ps.length} пина в този изглед</div></div>
+    <div class="sum"><div class="k">Най-горещ пин</div><div class="v">${top ? esc(top.title || "Пин без заглавие") : "–"}</div><div class="note">${top ? fmtN(top.velocity)+" запазвания на ден · "+esc(top.source) : ""}</div></div>
+    <div class="sum"><div class="k">Цветове в най-горещите</div><div class="swatches" role="img" aria-label="Основни цветове на най-горещите пинове">${cols.map(c=>`<i style="background:${c}" title="${c}"></i>`).join("")}</div><div class="note">Основният цвят на 16-те най-горещи пина</div></div>`;
 }
-function hue(hex){ const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; if(d<.08) return 400+mx*50; let h= mx===r?((g-b)/d)%6: mx===g?(b-r)/d+2:(r-g)/d+4; return (h*60+360)%360; }
 function renderChips(){
-  const lr = latestRun();
-  const base = strong(S.range === "day" && lr ? S.pins.filter(p => p.lastSeen === lr.date) : S.pins);
-  const counts = new Map(), src = new Map();
-  base.forEach(p => { counts.set(p.term, (counts.get(p.term)||0)+1); src.set(p.term, p.source); });
-  if (S.term && !counts.has(S.term)) S.term = null;
-  const list = [...counts.entries()].sort((a,b)=>b[1]-a[1]);
-  $("#termchips").innerHTML = `<button class="chip" aria-pressed="${!S.term}" data-t="">All searches <span class="n">${base.length}</span></button>` +
-    list.map(([t,n]) => `<button class="chip" aria-pressed="${S.term===t}" data-t="${esc(t)}" title="${src.get(t)==="trending"?"From Trend radar":"From your watchlist"}"><span class="src ${src.get(t)==="trending"?"trending":""}"></span>${esc(t)} <span class="n">${n}</span></button>`).join("");
-  $("#termchips").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { S.term = c.dataset.t || null; renderFeed(); }));
+  const all = (S.data[S.tab]?.pins || []).filter(p => (p.saves||0) >= S.minSaves);
+  const counts = new Map();
+  all.forEach(p => { const k = S.tab === "visuals" ? p.cat : p.source; counts.set(k, (counts.get(k)||0)+1); });
+  const order = S.tab === "visuals" ? Object.keys(S.cats).filter(k => counts.has(k)) : [...counts.keys()].sort((a,b)=>counts.get(b)-counts.get(a));
+  const label = k => S.tab === "visuals" ? (S.cats[k] || k) : k;
+  $("#chips").innerHTML = `<button class="chip" aria-pressed="${!S.chip}" data-c="">Всички <span class="n">${all.length}</span></button>` +
+    order.map(k => `<button class="chip" aria-pressed="${S.chip===k}" data-c="${esc(k)}">${esc(label(k))} <span class="n">${counts.get(k)}</span></button>`).join("");
+  $("#chips").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { S.chip = c.dataset.c || null; renderFeed(); }));
 }
 function growthPill(p){
   if (p.growth == null) return "";
   const g = p.growth, cls = g > 0.5 ? "up" : g < -0.5 ? "down" : "flat";
-  return `<span class="pill ${cls}" title="Change in saves per day since the pin was last checked">${g>0?"▲ +":g<0?"▼ ":""}${fmtN(Math.abs(g))}/day</span>`;
+  return `<span class="pill ${cls}" title="Нови запазвания на ден от последната проверка">${g>0?"▲ +":g<0?"▼ ":""}${fmtN(Math.abs(g))}/ден</span>`;
 }
+let shown = [];
 function renderFeed(){
-  renderSummary(); renderChips();
+  const d = S.data[S.tab];
+  if (!d) return;
+  renderChips();
+  const ps = pinsNow(); shown = ps;
+  renderSummary(ps);
+  $("#period").textContent = `Пинове от последните ${d.windowDays} дни`;
   const grid = $("#grid");
-  if (!S.runs.length) { grid.innerHTML = `<div class="empty">No pins yet. The first refresh runs tomorrow morning.</div>`; return; }
-  const ps = pinsInView();
-  if (!ps.length) { grid.innerHTML = `<div class="empty">No pins match this filter. Try "All pins" or "Last 7 days".</div>`; return; }
+  if (!ps.length) { grid.innerHTML = `<div class="empty">Няма пинове за този филтър. Избери „Всички“.</div>`; return; }
   grid.innerHTML = ps.map((p,i) => {
-    const ratio = p.w && p.h ? Math.min(2.2, p.h/p.w) : 1.3;
-    const img = p.img ? `<img src="${esc(p.img)}" alt="${esc(p.title||p.term)}" loading="lazy" referrerpolicy="no-referrer" width="360" height="${Math.round(360*ratio)}" style="background:${esc(p.color||"var(--surface-2)")}">`
+    const ratio = p.w && p.h ? p.h/p.w : 1.3;
+    const img = p.img ? `<img src="${esc(p.img)}" alt="${esc(p.title||p.source)}" loading="lazy" referrerpolicy="no-referrer" width="474" height="${Math.round(474*ratio)}" style="background:${esc(p.color||"var(--surface-2)")}">`
       : `<span style="display:block;width:100%;height:100%;background:${esc(p.color||"var(--surface-2)")}"></span>`;
-    return `<a class="card" href="${esc(p.url)}" target="_blank" rel="noopener">
-      <span class="img">${img}<span class="rank">#${i+1}</span>${p.video?'<span class="vid">VIDEO</span>':""}</span>
+    const where = S.tab === "visuals" ? (S.cats[p.cat] || p.cat) : p.source;
+    return `<button class="card" type="button" data-i="${i}">
+      <span class="img">${img}<span class="rank">#${i+1}</span>${p.video?'<span class="vid">ВИДЕО</span>':""}</span>
       <span class="b">
         ${p.title ? `<span class="t">${esc(p.title)}</span>` : ""}
-        <span class="stats"><span class="saves">${fmtN(p.saves)}<small>saves</small></span><span class="vel">${fmtN(p.velocity)}/day</span>${growthPill(p)}</span>
-        <span class="meta"><span class="term">${esc(p.term)}</span><span>posted ${esc(ago(p.createdAt))}</span>${p.domain?`<span>${esc(p.domain)}</span>`:""}</span>
-      </span></a>`;
+        <span class="stats"><span class="saves">${fmtN(p.saves)}<small>запазвания</small></span><span class="vel">${fmtN(p.velocity)}/ден</span>${growthPill(p)}</span>
+        <span class="meta"><span class="term">${esc(where)}</span><span>${esc(ago(p.createdAt))}</span></span>
+      </span></button>`;
   }).join("");
+  grid.querySelectorAll(".card").forEach(c => c.addEventListener("click", () => openLb(shown[+c.dataset.i])));
 }
-$("#range").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-  S.range = b.dataset.v; $("#range").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); loadPins();
-}));
-$("#sort").addEventListener("change", e => { S.sort = e.target.value; renderFeed(); });
-$("#minsaves").value = String(S.minSaves);
-$("#minsaves").addEventListener("change", e => { S.minSaves = +e.target.value; try { localStorage.setItem("pp.minSaves", e.target.value); } catch(_){} renderFeed(); });
+function openLb(p){
+  if (!p) return;
+  const where = S.tab === "visuals" ? (S.cats[p.cat] || p.cat) + " · " + p.source : p.source;
+  $("#lbbox").innerHTML = `
+    <div class="lb-img"><img src="${esc(p.big || p.img)}" alt="${esc(p.title)}" referrerpolicy="no-referrer" style="background:${esc(p.color||"transparent")}"></div>
+    <div class="lb-info">
+      <h3>${esc(p.title || "Пин без заглавие")}</h3>
+      <div class="lb-stats">
+        <div class="lb-stat"><div class="k">Запазвания</div><div class="v">${fmtN(p.saves)}</div></div>
+        <div class="lb-stat"><div class="k">На ден</div><div class="v">${fmtN(p.velocity)}</div></div>
+        <div class="lb-stat"><div class="k">Качен</div><div class="v" style="font-size:16px">${esc(ago(p.createdAt) || "–")}</div></div>
+        <div class="lb-stat"><div class="k">Сега набира</div><div class="v" style="font-size:16px">${p.growth == null ? "след 2-ра проверка" : (p.growth>0?"+":"")+fmtN(p.growth)+"/ден"}</div></div>
+      </div>
+      ${p.color ? `<div class="swatch-row"><i style="background:${esc(p.color)}"></i>Основен цвят ${esc(p.color)}</div>` : ""}
+      <div class="hint">Източник: ${esc(where)}${p.domain ? " · " + esc(p.domain) : ""}</div>
+      <div class="lb-actions">
+        <a class="btn" href="${esc(p.url)}" target="_blank" rel="noopener">Отвори в Pinterest</a>
+        ${p.big ? `<a class="btn ghost" href="${esc(p.big)}" target="_blank" rel="noopener">Картинка в голям размер</a>` : ""}
+      </div>
+    </div>`;
+  $("#lb").hidden = false; $("#lbclose").focus();
+}
+function closeLb(){ $("#lb").hidden = true; }
+$("#lbclose").addEventListener("click", closeLb);
+$("#lb").addEventListener("click", e => { if (e.target.id === "lb") closeLb(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeLb(); });
+$("#sort").value = S.sort; $("#minsaves").value = String(S.minSaves);
+$("#sort").addEventListener("change", e => { S.sort = e.target.value; store.set("pp.sort", S.sort); renderFeed(); });
+$("#minsaves").addEventListener("change", e => { S.minSaves = +e.target.value; store.set("pp.min3", e.target.value); renderFeed(); });
+document.addEventListener("error", e => { if (e.target && e.target.tagName === "IMG") e.target.style.visibility = "hidden"; }, true);
 
-/* ---------- trends ---------- */
-function segs(el, items, cur, onPick){
-  el.innerHTML = items.map(([v,l]) => `<button data-v="${esc(v)}" aria-pressed="${v===cur}">${esc(l)}</button>`).join("");
-  el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => onPick(b.dataset.v)));
-}
-function trendDocs(region, interest){ return S.trends.filter(t => t.region === region && t.interest === interest).sort((a,b)=>a.endDate<b.endDate?-1:1); }
-function sparkline(vals){
-  const W=90,H=24,P=3;
-  if (vals.filter(v=>v!=null).length < 2) return `<span class="num" style="color:var(--muted)" title="History builds each week">building</span>`;
-  const max = Math.max(...vals.filter(v=>v!=null)), min = 0;
-  const x = i => P + i*(W-2*P)/(vals.length-1), y = v => H-P - (v-min)/(max-min||1)*(H-2*P);
-  const pts = vals.map((v,i)=> v==null?null:[x(i),y(v)]).filter(Boolean);
-  const d = pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+","+p[1].toFixed(1)).join("");
-  const area = d + `L${pts[pts.length-1][0].toFixed(1)},${H-P}L${pts[0][0].toFixed(1)},${H-P}Z`;
-  const last = pts[pts.length-1];
-  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weekly search volume"><path d="${area}" fill="var(--bar)" opacity=".18"/><path d="${d}" fill="none" stroke="var(--bar)" stroke-width="2" stroke-linejoin="round"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="var(--accent)"/></svg>`;
-}
-function renderTrends(){
-  segs($("#region"), REGIONS, S.region, v => { S.region = v; try{localStorage.setItem("pp.region",v)}catch(e){} renderTrends(); });
-  segs($("#interest"), INTERESTS, S.interest, v => { S.interest = v; renderTrends(); });
-  const docs = trendDocs(S.region, S.interest);
-  const tbl = $("#ttable");
-  if (!docs.length) { tbl.innerHTML = `<tr><td class="loading">No trend data for this market yet.</td></tr>`; $("#wk").textContent=""; }
-  else {
-    const cur = docs[docs.length-1];
-    $("#wk").textContent = `Pinterest week ending ${dateLabel(cur.endDate)} · ${docs.length} week${docs.length>1?"s":""} of history`;
-    const maxLog = Math.log10(Math.max(...cur.terms.map(t => Math.max(1,(t.m||0)+100))));
-    const minLog = 2; // 0% growth
-    tbl.innerHTML = `<thead><tr><th>#</th><th>Search</th><th>Monthly growth</th><th>Weekly</th><th>Yearly</th><th>Volume</th><th>History</th></tr></thead><tbody>` +
-      cur.terms.map((t,i) => {
-        const lg = Math.log10(Math.max(100,(t.m||0)+100));
-        const w = Math.max(2, (lg-minLog)/(maxLog-minLog||1)*100);
-        const hist = docs.map(d => (d.terms.find(x => x.term === t.term)||{}).count ?? null);
-        const pill = v => v==null?"–":`<span class="pill ${v>0?"up":v<0?"down":"flat"}">${fmtPct(v)}</span>`;
-        const q = encodeURIComponent(t.term);
-        return `<tr><td class="r">${i+1}</td>
-          <td class="term"><a href="https://www.pinterest.com/search/pins/?q=${q}" target="_blank" rel="noopener">${esc(t.term)}</a><span class="alt"><a href="https://trends.pinterest.com/search/?q=${q}" target="_blank" rel="noopener" style="font-weight:400">on Pinterest Trends ↗</a></span></td>
-          <td class="barcell"><div class="barrow" title="${esc(t.term)}: ${fmtPct(t.m)} month over month"><div class="bartrack"><div class="barfill" style="width:${w.toFixed(1)}%"></div></div><span class="barval">${fmtPct(t.m)}</span></div></td>
-          <td>${pill(t.w)}</td><td>${pill(t.y)}</td>
-          <td><span class="vol" title="Relative search volume ${t.count}"><i style="width:${Math.max(3,(t.count||0)*.5)}px"></i><span class="num">${t.count??"–"}</span></span></td>
-          <td>${sparkline(hist)}</td></tr>`;
-      }).join("") + `</tbody>`;
-  }
-  $("#xgrid").innerHTML = REGIONS.map(([r,l]) => {
-    const d = trendDocs(r, "FASHION_WOMENS").pop();
-    if (!d) return "";
-    const top = d.terms.slice().sort((a,b)=>(b.m||0)-(a.m||0)).slice(0,5);
-    return `<div class="xcol"><h4>${esc(l)}</h4><ol>${top.map(t=>`<li><a href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(t.term)}" target="_blank" rel="noopener">${esc(t.term)}</a><span class="num">${fmtPct(t.m)}</span></li>`).join("")}</ol></div>`;
+/* ---------- sources ---------- */
+function renderSources(){
+  if (!S.config) { $("#srclist").innerHTML = `<div class="loading">Зарежда…</div>`; return; }
+  if (!S.draft) S.draft = { sources: S.config.sources.map(s => ({...s})), clothesPerDay: S.config.clothesPerDay, visualsPerDay: S.config.visualsPerDay };
+  const dr = S.draft, cur = S.state?.cursor || {};
+  const nextIds = new Set();
+  [["clothes", dr.clothesPerDay], ["visuals", dr.visualsPerDay]].forEach(([tab, n]) => {
+    const list = dr.sources.filter(s => s.on !== false && s.tab === tab);
+    for (let i = 0; i < Math.min(n, list.length); i++) nextIds.add(list[((cur[tab]||0) + i) % list.length].url);
+  });
+  const groups = [["clothes","knitwear","Дрехи"], ...Object.entries(S.cats).filter(([k]) => k !== "knitwear").map(([k,v]) => ["visuals",k,"Визии: "+v])];
+  $("#srclist").innerHTML = groups.map(([tab,cat,title]) => {
+    const items = dr.sources.map((s,i) => ({s,i})).filter(({s}) => s.tab === tab && s.cat === cat);
+    if (!items.length) return "";
+    return `<div class="src-group"><h3>${esc(title)}</h3>${items.map(({s,i}) => `
+      <div class="src"><input type="checkbox" id="src-${i}" data-i="${i}" ${s.on!==false?"checked":""} aria-label="Включи ${esc(s.name)}">
+      <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>
+      ${nextIds.has(s.url) && s.on!==false ? `<span class="next">Следваща</span>` : ""}
+      <button type="button" data-del="${i}" aria-label="Премахни ${esc(s.name)}">×</button></div>`).join("")}</div>`;
   }).join("");
-}
-
-/* ---------- watchlist ---------- */
-let draft = null;
-function renderWatch(){
-  if (!S.config) { $("#terms").innerHTML = `<span class="loading">Loading…</span>`; return; }
-  if (!draft) draft = { watchlist: [...(S.config.watchlist||[])], watchTermsPerDay: S.config.watchTermsPerDay, trendTermsPerDay: S.config.trendTermsPerDay, pinsPerTerm: S.config.pinsPerTerm };
-  const cur = (S.state?.watchCursor || 0) % Math.max(1, draft.watchlist.length);
-  const nextSet = new Set(); for (let i=0;i<draft.watchTermsPerDay && i<draft.watchlist.length;i++) nextSet.add((cur+i)%draft.watchlist.length);
-  $("#terms").innerHTML = draft.watchlist.map((t,i) => `<span class="term-tag ${nextSet.has(i)?"next":""}">${esc(t)}${S.canEdit?`<button type="button" data-i="${i}" aria-label="Remove ${esc(t)}">×</button>`:""}</span>`).join("") || `<span class="loading">No searches yet. Add one below.</span>`;
-  $("#terms").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { draft.watchlist.splice(+b.dataset.i,1); renderWatch(); }));
-  $("#addform").hidden = !S.canEdit; $("#ro").hidden = S.canEdit;
-  ["watch","trend","pins"].forEach(k => { const el = $("#f-"+k); el.disabled = !S.canEdit; });
-  if (document.activeElement?.id?.startsWith("f-") !== true) {
-    $("#f-watch").value = draft.watchTermsPerDay; $("#f-trend").value = draft.trendTermsPerDay; $("#f-pins").value = draft.pinsPerTerm;
-  }
+  $("#srclist").querySelectorAll("input[type=checkbox]").forEach(c => c.addEventListener("change", () => { dr.sources[+c.dataset.i].on = c.checked; renderSources(); }));
+  $("#srclist").querySelectorAll("button[data-del]").forEach(b => b.addEventListener("click", () => { dr.sources.splice(+b.dataset.del, 1); renderSources(); }));
+  if (document.activeElement?.id !== "f-clothes") $("#f-clothes").value = dr.clothesPerDay;
+  if (document.activeElement?.id !== "f-visuals") $("#f-visuals").value = dr.visualsPerDay;
   renderCost();
-  $("#savecfg").hidden = !S.canEdit;
-  const rr = S.runs.slice(0,10);
-  $("#runs").innerHTML = rr.length ? `<table><thead><tr><th>Refresh</th><th>Pins</th><th>Searches</th><th>Cost</th></tr></thead><tbody>${rr.map(r=>`<tr><td>${esc(dateLabel(r.date))}${r.trendsFetched?" · trends":""}</td><td>${(r.pins||[]).length}</td><td>${(r.terms||[]).length}</td><td>$${(r.cost||0).toFixed(2)}</td></tr>`).join("")}</tbody></table>` : "";
+  const rr = S.runs.slice(0, 10);
+  $("#runs").innerHTML = rr.length ? `<table><thead><tr><th>Обновяване</th><th>Страници</th><th>Пинове</th><th>Цена</th></tr></thead><tbody>${rr.map(r=>`<tr><td>${esc(dateLabel(r.date))}</td><td>${(r.sources||[]).length}</td><td>${r.pins||0}</td><td>$${(r.cost||0).toFixed(2)}</td></tr>`).join("")}</tbody></table>` : "";
 }
 function renderCost(){
-  const c = S.config || {};
-  const perDay = (draft.watchTermsPerDay + draft.trendTermsPerDay) * draft.pinsPerTerm * PRICE_PIN;
-  const trendsMonth = (c.regions||[]).length * (c.interests||[]).length * (c.trendTermsPerQuery||7) * PRICE_TERM * 30/(c.trendsEveryDays||7);
-  const month = perDay*30 + trendsMonth;
+  const dr = S.draft; if (!dr) return;
+  const month = (dr.clothesPerDay + dr.visualsPerDay) * 30 * PER_PAGE;
   const spent = S.state?.costLog?.[new Date().toISOString().slice(0,7)] || 0;
+  const cN = dr.sources.filter(s => s.on!==false && s.tab==="clothes").length, vN = dr.sources.filter(s => s.on!==false && s.tab==="visuals").length;
   $("#cost").innerHTML = `
-    <div class="row"><span>Pins per day</span><b>${(draft.watchTermsPerDay+draft.trendTermsPerDay)*draft.pinsPerTerm}</b></div>
-    <div class="row"><span>Estimated cost per month</span><b>$${month.toFixed(2)}</b></div>
-    <div class="row"><span>Spent this month</span><b>$${spent.toFixed(2)}</b></div>
-    ${month > 5 ? `<div class="warn">This is more than the free $5 Apify credit. Apify stops runs when the credit runs out, unless you upgrade your plan.</div>` : ""}`;
+    <div class="row"><span>Всяка страница за Дрехи се чете отново на</span><b>${dr.clothesPerDay ? Math.ceil(cN/dr.clothesPerDay) : "–"} дни</b></div>
+    <div class="row"><span>Всяка страница за Визии се чете отново на</span><b>${dr.visualsPerDay ? Math.ceil(vN/dr.visualsPerDay) : "–"} дни</b></div>
+    <div class="row"><span>Очаквана цена на месец</span><b>$${month.toFixed(2)}</b></div>
+    <div class="row"><span>Похарчено този месец</span><b>$${spent.toFixed(2)}</b></div>
+    ${month > 5 ? `<div class="warn">Това е над безплатните $5 в Apify. Когато кредитът свърши, Apify спира, докато не надградиш плана.</div>` : ""}`;
 }
-[["watch","watchTermsPerDay"],["trend","trendTermsPerDay"],["pins","pinsPerTerm"]].forEach(([k,f]) => {
-  $("#f-"+k).addEventListener("input", e => { const v = parseInt(e.target.value,10); if (!isNaN(v) && draft) { draft[f] = Math.max(+e.target.min, Math.min(+e.target.max, v)); renderCost(); } });
-});
+[["clothes","clothesPerDay"],["visuals","visualsPerDay"]].forEach(([k,f]) => $("#f-"+k).addEventListener("input", e => {
+  const v = parseInt(e.target.value,10); if (!isNaN(v) && S.draft) { S.draft[f] = Math.max(0, Math.min(6, v)); renderSources(); }
+}));
 $("#addform").addEventListener("submit", e => {
-  e.preventDefault(); const v = $("#newterm").value.trim().toLowerCase();
-  if (v && draft && !draft.watchlist.includes(v)) { draft.watchlist.push(v); $("#newterm").value = ""; renderWatch(); }
+  e.preventDefault();
+  const t = $("#toast"); t.className = "toast"; t.textContent = "";
+  const url = $("#newurl").value.trim();
+  const m = url.match(/pinterest\.[a-z.]+\/ideas\/([^/?#]+)\/(\d+)/i);
+  if (!m) { t.className = "toast err"; t.textContent = "Линкът трябва да е към страница /ideas/ в Pinterest."; return; }
+  const [tab, cat] = $("#newcat").value.split("|");
+  const clean = `https://www.pinterest.com/ideas/${m[1]}/${m[2]}/`;
+  if (S.draft.sources.some(s => s.url === clean)) { t.className = "toast err"; t.textContent = "Този източник вече е добавен."; return; }
+  const name = decodeURIComponent(m[1]).replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase());
+  S.draft.sources.push({ tab, cat, name, url: clean, on: true });
+  $("#newurl").value = ""; renderSources();
+  t.textContent = "Добавен. Натисни „Запази“.";
 });
-try { $("#f-pass").value = localStorage.getItem("pp.pass") || ""; } catch(e){}
+$("#f-pass").value = store.get("pp.pass") || "";
 $("#savecfg").addEventListener("click", async () => {
   const t = $("#toast"); t.className = "toast"; t.textContent = "";
-  if (!draft) return;
   const password = $("#f-pass").value;
-  if (!password) { t.className = "toast err"; t.textContent = "Enter the admin password first."; $("#f-pass").focus(); return; }
+  if (!password) { t.className = "toast err"; t.textContent = "Въведи паролата."; $("#f-pass").focus(); return; }
   try {
     $("#savecfg").disabled = true;
-    const r = await fetch("/api/config", { method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ password, config: draft }) });
+    const r = await fetch("/api/config", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ password, config: S.draft }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
-    try { localStorage.setItem("pp.pass", password); } catch(e){}
-    S.config = { ...S.config, ...draft };
-    t.textContent = "Saved. The next morning refresh uses these settings.";
-  } catch (e) { t.className = "toast err"; t.textContent = "Couldn't save: " + e.message + "."; }
+    store.set("pp.pass", password);
+    S.config = { ...S.config, ...S.draft };
+    t.textContent = "Запазено. Следващото обновяване ще използва тези настройки.";
+  } catch (e) { t.className = "toast err"; t.textContent = "Не се запази: " + e.message + "."; }
   finally { $("#savecfg").disabled = false; }
 });
 
-/* ---------- status ---------- */
-function renderStatus(){
-  const st = S.state;
-  const lr = latestRun();
-  $("#status").innerHTML = lr ? `Refreshed <b>${esc(ago(lr.at))}</b> · ${esc(new Date(lr.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}<br>Refreshes every morning around 7:00 (Sofia time)` : "Waiting for the first refresh";
-}
-
 /* ---------- data ---------- */
-let req = 0;
-async function load(range){
-  const my = ++req;
-  $("#grid").innerHTML = `<div class="loading">Loading pins…</div>`;
+function renderStatus(){
+  const lr = S.runs[0];
+  $("#status").innerHTML = lr ? `Обновено <b>${esc(ago(lr.at))}</b> · ${esc(new Date(lr.at).toLocaleString("bg-BG",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}<br>Обновява се всяка сутрин около 7:00` : "Чака първото обновяване";
+}
+const reqs = {};
+async function load(tab, quiet){
+  if (S.data[tab]) { if (!quiet) renderFeed(); return; }
+  if (!quiet) $("#grid").innerHTML = `<div class="loading">Зареждам пиновете…</div>`;
   try {
-    const r = await fetch("/api/data?range=" + range);
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
-    if (my !== req) return;
-    S.runs = j.runs || []; S.trends = j.trends || []; S.pins = j.pins || [];
-    if (!S.config || !draft) { S.config = j.config; draft = null; }
-    S.state = j.state;
-    renderStatus(); renderFeed(); renderTrends(); renderWatch();
+    reqs[tab] ||= fetch("/api/data?tab=" + tab).then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || ("HTTP " + r.status)); return j; });
+    const j = await reqs[tab];
+    S.data[tab] = j; S.cats = j.categories || {}; S.runs = j.runs || []; S.state = j.state;
+    if (!S.config) S.config = j.config;
+    renderStatus();
+    if (S.tab === tab) renderFeed();
+    if (S.tab === "sources") renderSources();
   } catch (e) {
-    $("#status").textContent = "Couldn't load data.";
-    $("#grid").innerHTML = `<div class="empty">Couldn't load the data (${esc(e.message)}). Reload the page to try again.</div>`;
+    delete reqs[tab];
+    $("#status").textContent = "Данните не се заредиха.";
+    if (!quiet) $("#grid").innerHTML = `<div class="empty">Данните не се заредиха (${esc(e.message)}). Презареди страницата.</div>`;
   }
 }
-function loadPins(){ load(S.range); }
-S.canEdit = true;
-document.addEventListener("error", e => { const t = e.target; if (t && t.tagName === "IMG") { t.style.visibility = "hidden"; } }, true);
-renderTrends();
-load(S.range);
+setTab(S.tab);
 })();
 </script>
 </body>

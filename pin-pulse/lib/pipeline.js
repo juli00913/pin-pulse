@@ -1,225 +1,153 @@
-// Daily refresh: Pinterest trend searches (weekly) + top pins for a rotating
-// set of searches (daily), fetched through Apify.
+// Daily refresh: reads a few Pinterest "ideas" pages (Pinterest's own most
+// popular pins per topic) through Apify and stores the pins with their saves.
+// Pages rotate, so every page is re-read every few days; pins seen again get a
+// "saves gained per day" figure.
 import { getJSON, setJSON } from "./store.js";
+import { DEFAULT_SOURCES } from "./sources.js";
 
-const TRENDS_ACTOR = "data_ops_main~pinterest-trends";
-const PINS_ACTOR = "parseforge~pinterest-scraper";
-const PRICE_TERM = 0.002;
-const PRICE_PIN = 0.0025;
+const ACTOR = "memo23~pinterest-scraper";
+const PRICE_PIN = 0.00145;
+const PRICE_RUN = 0.0086;
 const DAY_KEY_TTL = 60 * 86400;
+export const WINDOW_DAYS = { clothes: 14, visuals: 30 };
 
 export const DEFAULT_CONFIG = {
-  watchlist: [
-    "chunky knit cardigan", "fair isle sweater", "cable knit sweater",
-    "knit vest outfit", "mohair sweater", "crochet cardigan",
-    "knitted scarf outfit", "knit beanie outfit", "oversized knit sweater",
-    "cozy knitwear aesthetic", "knitted balaclava", "sweater vest pattern",
-    "fall color palette", "winter fashion 2026", "scandinavian knit",
-    "knit dress outfit",
-  ],
-  regions: ["US", "GB+IE", "DE+AT+CH", "FR"],
-  interests: ["FASHION_WOMENS", "DIY_AND_CRAFTS", "HOME_DECOR"],
-  trendTermsPerQuery: 7,
-  trendsEveryDays: 7,
-  // v2: the pin source returns at most 10 pins per search, so run more searches
-  // (5 a day, 50 pins, about $4.50/month with weekly trends) and let the page hide weak pins
-  configVersion: 2,
-  watchTermsPerDay: 3,
-  trendTermsPerDay: 2,
-  pinsPerTerm: 10,
-  keepPinsDays: 45,
-  // trending searches used for pins: only these markets and categories
-  pickRegions: ["US", "GB+IE"],
-  pickInterests: ["FASHION_WOMENS", "DIY_AND_CRAFTS"],
-  excludeWords: ["costume", "costumes", "halloween", "kids", "kid", "toddler", "toddlers", "baby", "babies",
-    "maternelle", "crèche", "creche", "eyfs", "homecoming", "garters", "prom", "school", "classe",
-    "concert", "independence", "kindern", "kleinkindern", "party", "bitmoji", "pumpkin"],
+  configVersion: 3,
+  clothesPerDay: 2,   // ideas pages read per day for the clothes tab
+  visualsPerDay: 2,   // ideas pages read per day for the visuals tab
+  keepDays: 45,
+  sources: DEFAULT_SOURCES,
 };
 
-export const V2_KEYS = ["configVersion", "watchTermsPerDay", "trendTermsPerDay", "pinsPerTerm", "pickRegions", "pickInterests", "excludeWords"];
-
-// Saved settings with any newer defaults applied (does not write).
+// Saved settings with newer defaults applied (does not write).
 export function upgradeConfig(stored = {}) {
-  const c = { ...stored };
-  if ((c.configVersion || 1) < DEFAULT_CONFIG.configVersion) for (const k of V2_KEYS) c[k] = DEFAULT_CONFIG[k];
-  return { ...DEFAULT_CONFIG, ...c };
+  // v3 replaced search terms with ideas pages; older settings are dropped
+  if ((stored?.configVersion || 1) < 3) return { ...DEFAULT_CONFIG };
+  return { ...DEFAULT_CONFIG, ...stored };
 }
 
 export const today = () => new Date().toISOString().slice(0, 10);
 const daysBetween = (a, b) => Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 864e5);
 
-async function apify(token, actor, input) {
-  const url = `https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${encodeURIComponent(token)}&timeout=240`;
+async function apify(token, input) {
+  const url = `https://api.apify.com/v2/acts/${ACTOR}/run-sync-get-dataset-items?token=${encodeURIComponent(token)}&timeout=240`;
   for (let i = 0; i < 2; i++) {
     try {
       const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
       const j = await r.json();
       if (Array.isArray(j)) return j;
-      console.error("apify unexpected", actor, JSON.stringify(j).slice(0, 300));
-    } catch (e) { console.error("apify error", actor, e.message); }
+      console.error("apify unexpected", JSON.stringify(j).slice(0, 300));
+    } catch (e) { console.error("apify error", e.message); }
   }
   return [];
 }
 
-export function pinImage(url) {
+function sized(url, size) {
   if (!url || !url.includes("pinimg.com")) return url || null;
-  return url.replace(/\/originals\/|\/\d+x\d*\//, "/474x/").replace(/\.(png|heic|webp|gif|jpeg)$/i, ".jpg");
+  return url.replace(/\/(\d+x\d*|originals)\//, `/${size}/`);
 }
 
-export function pickTrendCandidates(allTerms, cfg) {
-  const pri = { FASHION_WOMENS: 0, DIY_AND_CRAFTS: 1, HOME_DECOR: 2 };
-  const regions = cfg.pickRegions || cfg.regions;
-  const interests = cfg.pickInterests || Object.keys(pri);
-  const rpri = Object.fromEntries(regions.map((r, i) => [r, i]));
-  const excl = (cfg.excludeWords || []).map(w => w.toLowerCase());
-  const ok = t => {
-    const words = new Set(t.term.toLowerCase().match(/[\p{L}\p{N}]+/gu) || []);
-    return regions.includes(t.region) && interests.includes(t.interest) && (t.count || 0) >= 20 && (t.m || 0) < 10000 && (t.w || 0) >= 0 && !excl.some(x => words.has(x));
+// Turn one raw Apify item into the compact pin the page uses.
+export function toPin(r, src, date, idx) {
+  const id = String(r.id || "");
+  if (!id || r.is_promoted) return null;
+  const im = r.images || {};
+  const base = (im["236x"] || im["474x"] || im.orig || {}).url || r.image_medium_url;
+  const dims = im["236x"] || im.orig || {};
+  const saves = Number(r.aggregated_pin_data?.aggregated_stats?.saves ?? r.repin_count ?? 0);
+  const t = Date.parse(r.created_at || "");
+  const created = isNaN(t) ? null : new Date(t).toISOString().slice(0, 10);
+  const age = created ? Math.max(1, daysBetween(created, date)) : 30;
+  const prev = idx[id];
+  const hist = { ...(prev?.h || {}) };
+  const last = Object.entries(hist).filter(([d]) => d < date).sort().pop();
+  const growth = last ? Math.round((saves - last[1]) / Math.max(1, daysBetween(last[0], date)) * 10) / 10 : null;
+  hist[date] = saves;
+  idx[id] = { h: Object.fromEntries(Object.entries(hist).sort().slice(-20)), f: prev?.f || date, l: date };
+  const title = (r.grid_title || r.title || r.seo_title || r.closeup_unified_description || r.description || "").trim();
+  return {
+    id, title: title.slice(0, 140), url: `https://www.pinterest.com/pin/${id}/`,
+    link: r.link || null, domain: r.domain && r.domain !== "Uploaded by user" ? r.domain : null,
+    saves, comments: Number(r.comment_count || 0), createdAt: created, ageDays: age,
+    velocity: Math.round(saves / age * 100) / 100, growth,
+    firstSeen: idx[id].f, lastSeen: date,
+    tab: src.tab, cat: src.cat, source: src.name,
+    color: r.dominant_color || null, w: dims.width || null, h: dims.height || null,
+    video: !!r.is_video, img: sized(base, "474x"), big: sized(base, "736x"),
   };
-  const seen = new Set(), out = [];
-  allTerms.filter(ok)
-    .sort((a, b) => (pri[a.interest] ?? 3) - (pri[b.interest] ?? 3) || (rpri[a.region] ?? 9) - (rpri[b.region] ?? 9) || (b.m || 0) - (a.m || 0))
-    .forEach(t => { const k = t.term.toLowerCase(); if (!seen.has(k)) { seen.add(k); out.push({ term: t.term, interest: t.interest, region: t.region, m: t.m }); } });
-  return out.slice(0, 30);
 }
 
-export async function runRefresh({ token, date = today(), forceTrends = false, log = console.log } = {}) {
-  const now = new Date().toISOString();
-  let stored = await getJSON("config", {});
-  const state = await getJSON("state", {});
-  state.termLastSearched ||= {}; state.watchCursor ||= 0; state.latestTrending ||= []; state.costLog ||= {};
-  if ((stored.configVersion || 1) < DEFAULT_CONFIG.configVersion) {
-    // upgrade saved settings to the v2 defaults, keeping the watchlist
-    for (const k of V2_KEYS) stored[k] = DEFAULT_CONFIG[k];
-    await setJSON("config", stored);
-    const old = await getJSON("trends", []);
-    const latest = old.map(t => t.endDate).sort().pop();
-    const all = old.filter(t => t.endDate === latest).flatMap(t => t.terms.map(x => ({ ...x, region: t.region, interest: t.interest })));
-    state.latestTrending = pickTrendCandidates(all, { ...DEFAULT_CONFIG, ...stored });
+function pickSources(cfg, state, tab, n) {
+  const list = (cfg.sources || []).filter(s => s.on !== false && s.tab === tab);
+  if (!list.length || n <= 0) return [];
+  state.cursor ||= {};
+  const cur = (state.cursor[tab] || 0) % list.length;
+  const out = [];
+  for (let i = 0; i < Math.min(n, list.length); i++) out.push(list[(cur + i) % list.length]);
+  state.cursor[tab] = (cur + n) % list.length;
+  return out;
+}
+
+// Fetch pins for the given sources: one Apify run per ideas page, at most 4 at
+// a time (the free Apify plan allows 5 runs at once).
+export async function fetchSources(token, sources, date, idx) {
+  const results = [];
+  for (let i = 0; i < sources.length; i += 4) {
+    const batch = sources.slice(i, i + 4);
+    results.push(...await Promise.all(batch.map(src =>
+      apify(token, { startUrls: [{ url: src.url }], maxItems: 25 }).then(rows => ({ src, rows })))));
   }
-  const cfg = { ...DEFAULT_CONFIG, ...stored };
-  const index = await getJSON("pinindex", {});      // id -> {h:{date:saves}, f:firstSeen, l:lastSeen}
-  let trends = await getJSON("trends", []);
-  let runs = await getJSON("runs", []);
-  let cost = 0, trendsFetched = false;
-
-  // ---- weekly trends (one Apify run per region, in parallel) ----
-  const due = forceTrends || !state.lastTrendsRun || daysBetween(state.lastTrendsRun, date) >= cfg.trendsEveryDays;
-  const trendsPromise = due ? Promise.all(cfg.regions.map(region =>
-    apify(token, TRENDS_ACTOR, { country: region, interests: cfg.interests, trendType: "GROWING", maxTermsPerQuery: cfg.trendTermsPerQuery })
-      .then(rows => ({ region, rows })))) : Promise.resolve([]);
-
-  // ---- choose today's searches ----
-  const watch = (cfg.watchlist || []).map(s => s.trim()).filter(Boolean);
-  const picks = [];
-  if (watch.length) {
-    const cur = state.watchCursor % watch.length;
-    for (let i = 0; i < Math.min(cfg.watchTermsPerDay, watch.length); i++) picks.push({ term: watch[(cur + i) % watch.length], source: "watchlist" });
-    state.watchCursor = (cur + cfg.watchTermsPerDay) % watch.length;
-  }
-
-  const trendResults = await trendsPromise;
-  if (trendResults.length) {
-    const all = [];
-    for (const { region, rows } of trendResults) {
-      cost += rows.length * PRICE_TERM;
-      const byInt = {};
-      rows.forEach(r => (byInt[r.interest || "ALL"] ||= []).push(r));
-      for (const [interest, rs] of Object.entries(byInt)) {
-        const endDate = rs[0].endDate || date;
-        const terms = rs.sort((a, b) => (a.rank || 99) - (b.rank || 99)).map(r => ({
-          term: r.term, rank: r.rank, count: r.normalizedCount, w: r.weeklyChangePct, m: r.monthlyChangePct,
-          y: r.yearlyChangePct, season: r.seasonalityScore,
-        }));
-        trends = trends.filter(t => !(t.endDate === endDate && t.region === region && t.interest === interest));
-        trends.push({ endDate, region, interest, fetchedAt: now, terms });
-        terms.forEach(t => all.push({ ...t, region, interest }));
-      }
-    }
-    if (all.length) {
-      trendsFetched = true;
-      state.lastTrendsRun = date;
-      state.latestTrending = pickTrendCandidates(all, cfg);
-    }
-    // keep ~26 weeks
-    const weeks = [...new Set(trends.map(t => t.endDate))].sort().slice(-26);
-    trends = trends.filter(t => weeks.includes(t.endDate));
-  }
-
-  let nTr = cfg.trendTermsPerDay;
-  for (const c of state.latestTrending) {
-    if (nTr <= 0) break;
-    const last = state.termLastSearched[c.term.toLowerCase()];
-    if (last && daysBetween(last, date) < 10) continue;
-    if (picks.some(p => p.term.toLowerCase() === c.term.toLowerCase())) continue;
-    picks.push({ term: c.term, source: "trending", interest: c.interest, region: c.region });
-    nTr--;
-  }
-
-  // ---- pins (parallel, one run per search) ----
-  const results = await Promise.all(picks.map(p => apify(token, PINS_ACTOR, { searchTerms: [p.term], maxItems: cfg.pinsPerTerm }).then(rows => ({ p, rows }))));
-  if (picks.length && results.every(x => !x.rows.length) && !trendsFetched)
-    throw new Error("Apify returned no data. Check APIFY_TOKEN and your Apify credit.");
-  const touched = new Map(), termLog = [];
-  for (const { p, rows } of results) {
-    cost += rows.length * PRICE_PIN;
-    state.termLastSearched[p.term.toLowerCase()] = date;
-    termLog.push({ ...p, count: rows.length });
+  const pins = new Map(); let cost = 0; const log = [];
+  for (const { src, rows } of results) {
+    cost += rows.length * PRICE_PIN + PRICE_RUN;
+    let n = 0;
     for (const r of rows) {
-      const id = String(r.pinId || "");
-      if (!id || r.error) continue;
-      const prevDoc = touched.get(id);
-      const idx = index[id] || { h: {}, f: date };
-      const saves = Number(r.saveCount || 0);
-      const created = /^\d{4}-\d{2}-\d{2}/.test(r.createdAt || "") ? r.createdAt.slice(0, 10) : null;
-      const age = created ? Math.max(1, daysBetween(created, date)) : 30;
-      const prev = Object.entries(idx.h).filter(([d]) => d < date).sort().pop();
-      const growth = prev ? Math.round((saves - prev[1]) / Math.max(1, daysBetween(prev[0], date)) * 100) / 100 : null;
-      idx.h[date] = saves;
-      idx.h = Object.fromEntries(Object.entries(idx.h).sort().slice(-30));
-      idx.l = date;
-      index[id] = idx;
-      const na = v => (v == null || v === "N/A" ? null : v);
-      touched.set(id, {
-        id, title: (r.title || "").slice(0, 160), desc: (r.description || "").slice(0, 280),
-        url: r.pinUrl, link: na(r.outboundLink), domain: na(r.linkDomain),
-        saves, repins: Number(r.repinCount || 0), comments: Number(r.commentCount || 0),
-        shares: Number(r.shareCount || 0), reactions: Number(r.reactionCount || 0),
-        createdAt: created, ageDays: age, velocity: Math.round(saves / age * 1000) / 1000, growth,
-        history: idx.h, firstSeen: idx.f, lastSeen: date,
-        term: prevDoc?.term || p.term, terms: [...new Set([...(prevDoc?.terms || []), p.term])],
-        source: prevDoc?.source || p.source, color: r.dominantColor || null,
-        w: r.imageWidth || null, h: r.imageHeight || null,
-        video: String(r.mediaType || "").toLowerCase() === "video",
-        tags: (r.visualAnnotations || []).slice(0, 8), pinner: na(r.pinnerUsername), board: na(r.boardName),
-        img: pinImage(r.imageUrl),
-      });
+      const p = toPin(r, src, date, idx);
+      if (p && !pins.has(p.id)) { pins.set(p.id, p); n++; }
     }
+    log.push({ source: src.name, tab: src.tab, cat: src.cat, count: n });
   }
+  return { pins, cost, log };
+}
 
-  // prune index
-  for (const [id, v] of Object.entries(index)) if (v.l && daysBetween(v.l, date) > cfg.keepPinsDays) delete index[id];
+export async function runRefresh({ token, date = today(), sources = null, log = console.log } = {}) {
+  const now = new Date().toISOString();
+  const cfg = upgradeConfig(await getJSON("config", {}));
+  const state = await getJSON("state", {});
+  state.costLog ||= {};
+  const idx = await getJSON("pinindex", {});
+  let runs = await getJSON("runs", []);
 
-  cost = Math.round(cost * 10000) / 10000;
+  const picks = sources || [
+    ...pickSources(cfg, state, "clothes", cfg.clothesPerDay),
+    ...pickSources(cfg, state, "visuals", cfg.visualsPerDay),
+  ];
+  const { pins, cost: c, log: srcLog } = await fetchSources(token, picks, date, idx);
+  if (picks.length && !pins.size) throw new Error("Apify returned no pins. Check APIFY_TOKEN and your Apify credit.");
+
+  for (const [id, v] of Object.entries(idx)) if (v.l && daysBetween(v.l, date) > cfg.keepDays) delete idx[id];
+  const cost = Math.round(c * 10000) / 10000;
   const month = date.slice(0, 7);
   state.costLog[month] = Math.round(((state.costLog[month] || 0) + cost) * 10000) / 10000;
   state.costLog = Object.fromEntries(Object.entries(state.costLog).sort().slice(-6));
-  state.termLastSearched = Object.fromEntries(Object.entries(state.termLastSearched).sort((a, b) => a[1] < b[1] ? -1 : 1).slice(-200));
-  state.lastRun = date; state.lastRunAt = now;
+  state.lastRun = date; state.lastRunAt = now; state.dataVersion = 3;
 
-  const run = { date, at: now, terms: termLog, pins: [...touched.keys()], trendsFetched, cost };
+  const existing = (await getJSON("pins:" + date, [])).filter(p => p.tab && !pins.has(p.id));
+  await setJSON("pins:" + date, [...existing, ...pins.values()], DAY_KEY_TTL);
+  const prevRun = runs.find(r => r.date === date && r.v === 3);
+  const run = {
+    date, at: now, v: 3,
+    sources: [...(prevRun?.sources || []), ...srcLog],
+    pins: pins.size + (prevRun?.pins || 0),
+    cost: Math.round(((prevRun?.cost || 0) + cost) * 10000) / 10000,
+  };
   runs = [run, ...runs.filter(r => r.date !== date)].slice(0, 60);
-
-  // merge with pins already stored for the same day (a second run on one day)
-  const existing = (await getJSON("pins:" + date, [])).filter(p => !touched.has(p.id));
-  await setJSON("pins:" + date, [...existing, ...touched.values()], DAY_KEY_TTL);
-  await setJSON("pinindex", index);
-  await setJSON("trends", trends);
+  await setJSON("pinindex", idx);
   await setJSON("runs", runs);
   await setJSON("state", state);
-  if (!(await getJSON("config"))) await setJSON("config", DEFAULT_CONFIG);
+  if (((await getJSON("config", {}))?.configVersion || 1) < 3) await setJSON("config", cfg);
 
-  const summary = { date, pins: touched.size, terms: termLog, trendsFetched, cost, monthCost: state.costLog[month] };
+  const summary = { date, pins: pins.size, sources: srcLog, cost, monthCost: state.costLog[month] };
   log(JSON.stringify(summary));
   return summary;
 }

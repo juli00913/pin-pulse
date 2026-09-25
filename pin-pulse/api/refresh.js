@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: "APIFY_TOKEN is not set in the Vercel project settings." });
   try {
     await ensureSeeded();
-    const summary = await runRefresh({ token, forceTrends: req.query?.trends === "1" });
+    const summary = await runRefresh({ token });
     res.status(200).json({ ok: true, ...summary });
   } catch (e) {
     console.error(e);

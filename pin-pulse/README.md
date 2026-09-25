@@ -1,12 +1,14 @@
 # Pin Pulse
 
-A private dashboard showing what Pinterest is saving right now, built for knitwear inspiration.
+A private dashboard with the pins people love on Pinterest right now, for knitwear inspiration. It doesn't use search terms: it reads Pinterest's "ideas" pages, which list Pinterest's own most popular pins for a topic.
 
-- **Today's pins**: the top pins for a few searches each day, ranked by saves per day since posting. Pins that come back on a later day also show how fast they are gaining saves.
-- **Trend radar**: Pinterest's fastest-rising searches for the US, UK & Ireland, DACH and France, in women's fashion, DIY & crafts and home decor. Refreshed weekly, and the history builds up over time.
-- **Watchlist & settings**: choose which searches to follow and how much to fetch each day. The page shows an estimated monthly cost.
+- **Дрехи (Clothes)**: knitwear pins from pages like Knitwear, Knit Fashion, Cable Knit and Cardigan Outfits (last 14 days).
+- **Визии за дизайн (Visuals)**: pins to use for designing knitwear graphics: patterns & motifs, illustrations & graphics, colour palettes, nature & textures, paintings & drawings (last 30 days).
+- **Източници и настройки (Sources)**: turn pages on or off, add your own ideas pages, and choose how many pages are read per day.
 
-Data comes from Apify (actors `data_ops_main/pinterest-trends` and `parseforge/pinterest-scraper`). A Vercel Cron job refreshes it every morning.
+Pins are ranked by saves per day since they were posted. Each page is re-read every few days, and a pin seen again also shows how many saves a day it's gaining now.
+
+Data comes from the Apify actor `memo23/pinterest-scraper`. A Vercel Cron job refreshes it every morning.
 
 ## Deploy on Vercel (about 10 minutes)
 
@@ -22,24 +24,25 @@ Data comes from Apify (actors `data_ops_main/pinterest-trends` and `parseforge/p
    | `CRON_SECRET` | any long random text (lets Vercel's scheduler call the refresh) |
 
 5. **Redeploy.** Go to the Deployments tab → ⋯ → Redeploy, so the new variables are picked up.
-6. **Open the site.** The first visit loads the 25 Sept snapshot. The daily refresh runs at 04:00 UTC (07:00 Sofia in summer, 06:00 in winter). On the free plan it can run any time within that hour.
+6. **Open the site.** The first visit loads the 25 Sept data. The daily refresh runs at 04:00 UTC (07:00 Sofia in summer, 06:00 in winter). On the free plan it can run any time within that hour.
 
-To run a refresh by hand, open `https://<your-site>/api/refresh?key=<ADMIN_PASSWORD>`. Add `&trends=1` to also re-fetch the weekly trends.
+To run a refresh by hand, open `https://<your-site>/api/refresh?key=<ADMIN_PASSWORD>`.
 
 ## Costs
 
 - Vercel Hobby and Upstash free plans are free for this use.
-- Apify: about $0.0025 per pin and $0.002 per trend search. The default settings (5 searches × 10 pins a day, trends weekly) come to about **$4.50 a month**, which fits inside Apify's free $5 monthly credit. Apify stops runs when the credit runs out, so there are no surprise bills.
+- Apify: about $0.04 per ideas page (about 20 pins). The default of 4 pages a day comes to about **$4.50 a month**, inside Apify's free $5 monthly credit. Apify stops runs when the credit runs out, so there are no surprise bills. The free plan also allows only 5 runs at once, so the app reads at most 4 pages at a time.
 
 ## Files
 
 - `public/index.html`: the dashboard
-- `api/data.js`: returns pins, trends and settings to the page
+- `api/data.js`: returns pins and settings to the page (`?tab=clothes` or `?tab=visuals`)
 - `api/refresh.js`: the daily job (Vercel Cron, see `vercel.json`)
-- `api/config.js`: saves the watchlist and budget (password protected)
+- `api/config.js`: saves sources and pages per day (password protected)
 - `lib/pipeline.js`: fetching and scoring logic
 - `lib/store.js`: storage (Upstash Redis, or a local file for testing)
-- `lib/seed-data.js` + `public/seed/`: the first data pull, shown until the first refresh
+- `lib/sources.js`: the default ideas pages and categories
+- `lib/seed-data.js`: the first data pull (25 Sept 2026), loaded once
 
 Local preview: `npm run dev`, then open http://localhost:3000. It uses a local file instead of Redis.
 
