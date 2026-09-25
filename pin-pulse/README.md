@@ -3,7 +3,7 @@
 A private dashboard with the pins people love on Pinterest right now, for knitwear inspiration. It doesn't use search terms: it reads Pinterest's "ideas" pages, which list Pinterest's own most popular pins for a topic.
 
 - **Дрехи (Clothes)**: knitwear pins from pages like Knitwear, Knit Fashion, Cable Knit and Cardigan Outfits (last 14 days).
-- **Визии за дизайн (Visuals)**: pins to use for designing knitwear graphics: patterns & motifs, illustrations & graphics, colour palettes, nature & textures, paintings & drawings (last 30 days).
+- **Визии за дизайн (Visuals)**: pins to use for designing knitwear graphics: patterns & motifs, illustrations & graphics, nature & textures, paintings & drawings (last 30 days).
 - **Източници и настройки (Sources)**: turn pages on or off, add your own ideas pages, and choose how many pages are read per day.
 
 Pins are ranked by saves per day since they were posted. Each page is re-read every few days, and a pin seen again also shows how many saves a day it's gaining now.

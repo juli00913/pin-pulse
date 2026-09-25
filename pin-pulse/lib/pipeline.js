@@ -3,7 +3,7 @@
 // Pages rotate, so every page is re-read every few days; pins seen again get a
 // "saves gained per day" figure.
 import { getJSON, setJSON } from "./store.js";
-import { DEFAULT_SOURCES } from "./sources.js";
+import { DEFAULT_SOURCES, REMOVED_CATEGORIES } from "./sources.js";
 
 const ACTOR = "memo23~pinterest-scraper";
 const PRICE_PIN = 0.00145;
@@ -23,7 +23,9 @@ export const DEFAULT_CONFIG = {
 export function upgradeConfig(stored = {}) {
   // v3 replaced search terms with ideas pages; older settings are dropped
   if ((stored?.configVersion || 1) < 3) return { ...DEFAULT_CONFIG };
-  return { ...DEFAULT_CONFIG, ...stored };
+  const c = { ...DEFAULT_CONFIG, ...stored };
+  c.sources = (c.sources || []).filter(s => !REMOVED_CATEGORIES.includes(s.cat));
+  return c;
 }
 
 export const today = () => new Date().toISOString().slice(0, 10);

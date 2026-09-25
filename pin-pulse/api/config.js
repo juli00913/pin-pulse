@@ -20,6 +20,7 @@ export default async function handler(req, res) {
       if (!m) return null;
       const url = `https://www.pinterest.com/ideas/${m[1]}/${m[2]}/`;
       if (seen.has(url)) return null; seen.add(url);
+      if (!CATEGORIES[s.cat] && s.tab === "visuals") return null;
       const tab = s.tab === "visuals" ? "visuals" : "clothes";
       const cat = tab === "clothes" ? "knitwear" : (CATEGORIES[s.cat] && s.cat !== "knitwear" ? s.cat : "patterns");
       const name = String(s.name || decodeURIComponent(m[1]).replace(/-/g, " ")).slice(0, 60);

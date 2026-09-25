@@ -1,7 +1,7 @@
 import { getJSON, getMany } from "../lib/store.js";
 import { ensureSeeded } from "../lib/seed.js";
 import { upgradeConfig, WINDOW_DAYS } from "../lib/pipeline.js";
-import { CATEGORIES } from "../lib/sources.js";
+import { CATEGORIES, REMOVED_CATEGORIES } from "../lib/sources.js";
 
 // Everything the page needs in one call: ?tab=clothes (last 14 days) or
 // ?tab=visuals (last 30 days). Each pin appears once, with its latest figures.
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       const dates = v3.map(r => r.date).filter(d => (Date.parse(latest) - Date.parse(d)) / 864e5 < WINDOW_DAYS[tab]);
       const lists = await getMany(dates.map(d => "pins:" + d));
       const byId = new Map();
-      lists.flat().filter(p => p && p.tab === tab).forEach(p => {
+      lists.flat().filter(p => p && p.tab === tab && !REMOVED_CATEGORIES.includes(p.cat)).forEach(p => {
         const o = byId.get(p.id);
         if (!o || o.lastSeen < p.lastSeen) byId.set(p.id, p);
       });
