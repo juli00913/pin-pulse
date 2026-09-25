@@ -29,7 +29,7 @@ To run a refresh by hand, open `https://<your-site>/api/refresh?key=<ADMIN_PASSW
 ## Costs
 
 - Vercel Hobby and Upstash free plans are free for this use.
-- Apify: about $0.0025 per pin and $0.002 per trend search. The default settings (48 pins a day, trends weekly) come to about **$4.30 a month**, which fits inside Apify's free $5 monthly credit. Apify stops runs when the credit runs out, so there are no surprise bills.
+- Apify: about $0.0025 per pin and $0.002 per trend search. The default settings (5 searches × 10 pins a day, trends weekly) come to about **$4.50 a month**, which fits inside Apify's free $5 monthly credit. Apify stops runs when the credit runs out, so there are no surprise bills.
 
 ## Files
 

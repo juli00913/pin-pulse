@@ -21,13 +21,29 @@ export const DEFAULT_CONFIG = {
   interests: ["FASHION_WOMENS", "DIY_AND_CRAFTS", "HOME_DECOR"],
   trendTermsPerQuery: 7,
   trendsEveryDays: 7,
+  // v2: the pin source returns at most 10 pins per search, so run more searches
+  // (5 a day, 50 pins, about $4.50/month with weekly trends) and let the page hide weak pins
+  configVersion: 2,
   watchTermsPerDay: 3,
-  trendTermsPerDay: 1,
-  pinsPerTerm: 12,
+  trendTermsPerDay: 2,
+  pinsPerTerm: 10,
   keepPinsDays: 45,
-  excludeWords: ["costume", "kids", "toddler", "toddlers", "baby", "babies", "maternelle",
-    "crèche", "creche", "eyfs", "homecoming", "kindern", "kleinkindern"],
+  // trending searches used for pins: only these markets and categories
+  pickRegions: ["US", "GB+IE"],
+  pickInterests: ["FASHION_WOMENS", "DIY_AND_CRAFTS"],
+  excludeWords: ["costume", "costumes", "halloween", "kids", "kid", "toddler", "toddlers", "baby", "babies",
+    "maternelle", "crèche", "creche", "eyfs", "homecoming", "garters", "prom", "school", "classe",
+    "concert", "independence", "kindern", "kleinkindern", "party", "bitmoji", "pumpkin"],
 };
+
+export const V2_KEYS = ["configVersion", "watchTermsPerDay", "trendTermsPerDay", "pinsPerTerm", "pickRegions", "pickInterests", "excludeWords"];
+
+// Saved settings with any newer defaults applied (does not write).
+export function upgradeConfig(stored = {}) {
+  const c = { ...stored };
+  if ((c.configVersion || 1) < DEFAULT_CONFIG.configVersion) for (const k of V2_KEYS) c[k] = DEFAULT_CONFIG[k];
+  return { ...DEFAULT_CONFIG, ...c };
+}
 
 export const today = () => new Date().toISOString().slice(0, 10);
 const daysBetween = (a, b) => Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 864e5);
@@ -52,11 +68,13 @@ export function pinImage(url) {
 
 export function pickTrendCandidates(allTerms, cfg) {
   const pri = { FASHION_WOMENS: 0, DIY_AND_CRAFTS: 1, HOME_DECOR: 2 };
-  const rpri = Object.fromEntries(cfg.regions.map((r, i) => [r, i]));
+  const regions = cfg.pickRegions || cfg.regions;
+  const interests = cfg.pickInterests || Object.keys(pri);
+  const rpri = Object.fromEntries(regions.map((r, i) => [r, i]));
   const excl = (cfg.excludeWords || []).map(w => w.toLowerCase());
   const ok = t => {
     const words = new Set(t.term.toLowerCase().match(/[\p{L}\p{N}]+/gu) || []);
-    return (t.count || 0) >= 20 && (t.m || 0) < 10000 && (t.w || 0) >= 0 && !excl.some(x => words.has(x));
+    return regions.includes(t.region) && interests.includes(t.interest) && (t.count || 0) >= 20 && (t.m || 0) < 10000 && (t.w || 0) >= 0 && !excl.some(x => words.has(x));
   };
   const seen = new Set(), out = [];
   allTerms.filter(ok)
@@ -67,9 +85,19 @@ export function pickTrendCandidates(allTerms, cfg) {
 
 export async function runRefresh({ token, date = today(), forceTrends = false, log = console.log } = {}) {
   const now = new Date().toISOString();
-  const cfg = { ...DEFAULT_CONFIG, ...(await getJSON("config", {})) };
+  let stored = await getJSON("config", {});
   const state = await getJSON("state", {});
   state.termLastSearched ||= {}; state.watchCursor ||= 0; state.latestTrending ||= []; state.costLog ||= {};
+  if ((stored.configVersion || 1) < DEFAULT_CONFIG.configVersion) {
+    // upgrade saved settings to the v2 defaults, keeping the watchlist
+    for (const k of V2_KEYS) stored[k] = DEFAULT_CONFIG[k];
+    await setJSON("config", stored);
+    const old = await getJSON("trends", []);
+    const latest = old.map(t => t.endDate).sort().pop();
+    const all = old.filter(t => t.endDate === latest).flatMap(t => t.terms.map(x => ({ ...x, region: t.region, interest: t.interest })));
+    state.latestTrending = pickTrendCandidates(all, { ...DEFAULT_CONFIG, ...stored });
+  }
+  const cfg = { ...DEFAULT_CONFIG, ...stored };
   const index = await getJSON("pinindex", {});      // id -> {h:{date:saves}, f:firstSeen, l:lastSeen}
   let trends = await getJSON("trends", []);
   let runs = await getJSON("runs", []);

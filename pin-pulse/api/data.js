@@ -1,14 +1,15 @@
 import { getJSON, getMany } from "../lib/store.js";
 import { ensureSeeded } from "../lib/seed.js";
-import { DEFAULT_CONFIG } from "../lib/pipeline.js";
+import { DEFAULT_CONFIG, upgradeConfig } from "../lib/pipeline.js";
 
 // Everything the page needs in one call. ?range=day (latest refresh) or week.
 export default async function handler(req, res) {
   try {
     await ensureSeeded();
-    const [runs, trends, config, state] = await Promise.all([
+    const [runs, trends, rawConfig, state] = await Promise.all([
       getJSON("runs", []), getJSON("trends", []), getJSON("config", DEFAULT_CONFIG), getJSON("state", {}),
     ]);
+    const config = upgradeConfig(rawConfig);
     const range = req.query?.range === "week" ? "week" : "day";
     let pins = [];
     if (runs.length) {

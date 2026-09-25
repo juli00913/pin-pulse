@@ -199,6 +199,13 @@ table.tt{width:100%;border-collapse:collapse;min-width:640px;font-variant-numeri
         <button data-v="day" aria-pressed="true">Latest refresh</button>
         <button data-v="week" aria-pressed="false">Last 7 days</button>
       </div>
+      <label class="lbl" for="minsaves">Show
+        <select id="minsaves">
+          <option value="50">Pins with 50+ saves</option>
+          <option value="500">Pins with 500+ saves</option>
+          <option value="0">All pins</option>
+        </select>
+      </label>
       <label class="lbl" for="sort">Sort by
         <select id="sort">
           <option value="velocity">Hottest (saves per day)</option>
@@ -250,7 +257,7 @@ table.tt{width:100%;border-collapse:collapse;min-width:640px;font-variant-numeri
         <div class="fields">
           <div class="field"><label for="f-watch">Watchlist searches per day<small>Rotates through your list</small></label><input id="f-watch" type="number" min="0" max="20"></div>
           <div class="field"><label for="f-trend">Trending searches per day<small>Picked from Trend radar</small></label><input id="f-trend" type="number" min="0" max="10"></div>
-          <div class="field"><label for="f-pins">Pins per search<small>Top results from Pinterest search</small></label><input id="f-pins" type="number" min="3" max="50"></div>
+          <div class="field"><label for="f-pins">Pins per search<small>Top results from Pinterest search (max 10)</small></label><input id="f-pins" type="number" min="3" max="10"></div>
         </div>
         <div class="cost" id="cost"></div>
         <div class="field" style="margin-top:14px"><label for="f-pass">Admin password<small>Set as ADMIN_PASSWORD in Vercel. Remembered on this device.</small></label><input id="f-pass" type="password" autocomplete="current-password" style="width:140px;text-align:left;font-family:var(--body)"></div>
@@ -274,10 +281,11 @@ const REGIONS = [["US","United States"],["GB+IE","UK & Ireland"],["DE+AT+CH","DA
 const INTERESTS = [["FASHION_WOMENS","Women's fashion"],["DIY_AND_CRAFTS","DIY & crafts"],["HOME_DECOR","Home decor"]];
 const PRICE_PIN = 0.0025, PRICE_TERM = 0.002;
 
-const S = { tab: "feed", range: "day", sort: "velocity", term: null, region: "US", interest: "FASHION_WOMENS",
+const S = { tab: "feed", range: "day", sort: "velocity", minSaves: 50, term: null, region: "US", interest: "FASHION_WOMENS",
   runs: [], pins: [], trends: [], config: null, configVersion: null, state: null, canEdit: false, db: null };
 try { const t = localStorage.getItem("pp.tab"); if (t) S.tab = t; } catch(e){}
 try { const r = localStorage.getItem("pp.region"); if (r) S.region = r; } catch(e){}
+try { const m = localStorage.getItem("pp.minSaves"); if (m != null) S.minSaves = +m; } catch(e){}
 
 function ago(iso){
   if(!iso) return "";
@@ -303,9 +311,10 @@ setTab(S.tab);
 
 /* ---------- feed ---------- */
 function latestRun(){ return S.runs[0] || null; }
+function strong(ps){ return ps.filter(p => (p.saves||0) >= S.minSaves); }
 function pinsInView(){
   const lr = latestRun(); if (!lr) return [];
-  let ps = S.pins;
+  let ps = strong(S.pins);
   if (S.range === "day") ps = ps.filter(p => p.lastSeen === lr.date);
   if (S.term) ps = ps.filter(p => (p.terms||[]).includes(S.term) || p.term === S.term);
   const key = { velocity: p => p.velocity||0, saves: p => p.saves||0, growth: p => p.growth ?? -1e9, new: p => p.createdAt||"" }[S.sort];
@@ -315,20 +324,20 @@ function renderSummary(){
   const lr = latestRun();
   const box = $("#summary");
   if (!lr) { box.innerHTML = ""; return; }
-  const today = S.pins.filter(p => p.lastSeen === lr.date);
+  const today = strong(S.pins.filter(p => p.lastSeen === lr.date));
   const top = today.slice().sort((a,b)=>(b.velocity||0)-(a.velocity||0))[0];
   const cols = today.filter(p => /^#[0-9a-f]{6}$/i.test(p.color||"")).sort((a,b)=>(b.velocity||0)-(a.velocity||0)).slice(0,14)
     .map(p => p.color).sort((a,b)=>hue(a)-hue(b));
   const terms = (lr.terms||[]).map(t => t.term);
   box.innerHTML = `
-    <div class="sum"><div class="k">Latest refresh</div><div class="v big">${esc(dateLabel(lr.date))}</div><div class="note">${today.length} pins from ${terms.length} searches</div></div>
+    <div class="sum"><div class="k">Latest refresh</div><div class="v big">${esc(dateLabel(lr.date))}</div><div class="note">${today.length} pins${S.minSaves ? " with " + S.minSaves + "+ saves" : ""} from ${terms.length} searches</div></div>
     <div class="sum"><div class="k">Hottest pin</div><div class="v">${top ? esc(top.title || "Untitled pin") : "–"}</div><div class="note">${top ? fmtN(top.velocity)+" saves a day · "+esc(top.term) : ""}</div></div>
     <div class="sum"><div class="k">Colours in the top pins</div><div class="swatches" role="img" aria-label="Dominant colours of today's hottest pins">${cols.map(c=>`<i style="background:${c}" title="${c}"></i>`).join("")}</div><div class="note">Dominant colour of each of the 14 hottest pins</div></div>`;
 }
 function hue(hex){ const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; if(d<.08) return 400+mx*50; let h= mx===r?((g-b)/d)%6: mx===g?(b-r)/d+2:(r-g)/d+4; return (h*60+360)%360; }
 function renderChips(){
   const lr = latestRun();
-  const base = S.range === "day" && lr ? S.pins.filter(p => p.lastSeen === lr.date) : S.pins;
+  const base = strong(S.range === "day" && lr ? S.pins.filter(p => p.lastSeen === lr.date) : S.pins);
   const counts = new Map(), src = new Map();
   base.forEach(p => { counts.set(p.term, (counts.get(p.term)||0)+1); src.set(p.term, p.source); });
   if (S.term && !counts.has(S.term)) S.term = null;
@@ -347,7 +356,7 @@ function renderFeed(){
   const grid = $("#grid");
   if (!S.runs.length) { grid.innerHTML = `<div class="empty">No pins yet. The first refresh runs tomorrow morning.</div>`; return; }
   const ps = pinsInView();
-  if (!ps.length) { grid.innerHTML = `<div class="empty">No pins match this filter.</div>`; return; }
+  if (!ps.length) { grid.innerHTML = `<div class="empty">No pins match this filter. Try "All pins" or "Last 7 days".</div>`; return; }
   grid.innerHTML = ps.map((p,i) => {
     const ratio = p.w && p.h ? Math.min(2.2, p.h/p.w) : 1.3;
     const img = p.img ? `<img src="${esc(p.img)}" alt="${esc(p.title||p.term)}" loading="lazy" referrerpolicy="no-referrer" width="360" height="${Math.round(360*ratio)}" style="background:${esc(p.color||"var(--surface-2)")}">`
@@ -365,6 +374,8 @@ $("#range").querySelectorAll("button").forEach(b => b.addEventListener("click", 
   S.range = b.dataset.v; $("#range").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); loadPins();
 }));
 $("#sort").addEventListener("change", e => { S.sort = e.target.value; renderFeed(); });
+$("#minsaves").value = String(S.minSaves);
+$("#minsaves").addEventListener("change", e => { S.minSaves = +e.target.value; try { localStorage.setItem("pp.minSaves", e.target.value); } catch(_){} renderFeed(); });
 
 /* ---------- trends ---------- */
 function segs(el, items, cur, onPick){
