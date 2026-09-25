@@ -5,14 +5,13 @@ export const CATEGORIES = {
   knitwear: "Плетива",
   patterns: "Шарки и мотиви",
   illustration: "Илюстрации и графики",
-  nature: "Природа и текстури",
   art: "Картини и рисунки",
 };
 
 const I = "https://www.pinterest.com/ideas/";
 
 // Categories no longer used; pins and sources in them are hidden and ignored.
-export const REMOVED_CATEGORIES = ["palettes"];
+export const REMOVED_CATEGORIES = ["palettes", "nature"];
 
 export const DEFAULT_SOURCES = [
   // ---- clothes (knitwear only) ----
@@ -31,9 +30,6 @@ export const DEFAULT_SOURCES = [
   { tab: "visuals", cat: "illustration", name: "Illustration Art", url: I + "illustration-art/946168700358/" },
   { tab: "visuals", cat: "illustration", name: "Graphic Art", url: I + "graphic-art/899673152664/" },
   { tab: "visuals", cat: "illustration", name: "Print Design Art", url: I + "print-design-art/960159933943/" },
-  { tab: "visuals", cat: "nature", name: "Nature Aesthetic", url: I + "nature-aesthetic/904736726034/" },
-  { tab: "visuals", cat: "nature", name: "Natures Pattern", url: I + "natures-pattern/939552182521/" },
-  { tab: "visuals", cat: "nature", name: "Texture Element", url: I + "texture-element/923598192160/" },
   { tab: "visuals", cat: "art", name: "Landscapes Art", url: I + "landscapes-art/937523191739/" },
   { tab: "visuals", cat: "art", name: "Inspirational Artwork", url: I + "inspirational-artwork/939644407246/" },
   { tab: "visuals", cat: "art", name: "Folk Art", url: I + "folk-art/920937705477/" },
